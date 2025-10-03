@@ -1,0 +1,32 @@
+nVehicles:   4
+nDepots:     1
+nCustomers: 10
+nPeriods:    6
+VEHICLE_TYPE	FLEET_SIZE	CAPACITY
+           2	         4	      18	
+DEPOT   	X  	Y  	INV_COST	INITIAL_INV 	MIN_LEVEL_INV 	MAX_LEVEL_INV	PRODUCTION_0	PRODUCTION_1	PRODUCTION_2	PRODUCTION_3	PRODUCTION_4	PRODUCTION_5
+       0	412	 85	       0	         24	            0	          366	          64	          64	          64	          64	          64	          64	
+CUSTOMER	X  	Y  	INV_COST	INITIAL_INV	MIN_LEVEL_INV 	MAX_LEVEL_INV	DEMAND_0	DEMAND_1	DEMAND_2	DEMAND_3	DEMAND_4	DEMAND_5
+       1	138	445	    0.27	          9	            0	           24	      11	       9	       7	       6	       5	       6
+       2	165	489	     0.3	         12	            0	           12	       7	       8	       6	       6	       7	       7
+       3	247	299	    0.19	          7	            0	           10	       5	       5	       4	       4	       3	       6
+       4	 69	344	    0.14	         15	            0	           30	       8	       7	       5	       5	       7	       9
+       5	 82	 41	    0.03	          2	            0	           29	       7	       5	       4	       5	       6	       6
+       6	 97	135	    0.25	          3	            0	           28	       9	       9	       7	       6	       5	       6
+       7	150	 23	    0.26	          6	            0	            9	       6	       5	       4	       3	       4	       6
+       8	286	441	    0.14	         10	            0	           38	      14	       9	       7	       6	      10	      11
+       9	128	315	     0.1	         11	            0	           35	       7	       6	       5	       5	       7	       8
+      10	227	 26	     0.3	         11	            0	           22	       6	       5	       5	       4	       4	       6
+COST_MATRIX 
+	  0	  1	  2	  3	  4	  5	  6	  7	  8	  9	 10
+  0
+  1	227
+  2	237	 26
+  3	136	 92	104
+  4	215	 62	 87	 92
+  5	167	204	228	154	152
+  6	160	157	181	112	106	 48
+  7	135	212	234	147	166	 36	 62
+  8	189	 75	 66	 74	119	225	180	220
+  9	183	 66	 89	 61	 33	139	 92	147	102
+ 10	 98	215	234	137	178	 73	 85	 39	210	153

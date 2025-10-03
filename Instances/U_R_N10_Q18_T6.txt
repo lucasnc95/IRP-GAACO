@@ -1,0 +1,32 @@
+nVehicles:   4
+nDepots:     1
+nCustomers: 10
+nPeriods:    6
+VEHICLE_TYPE	FLEET_SIZE	CAPACITY
+           2	         4	      18	
+DEPOT   	X  	Y  	INV_COST	INITIAL_INV 	MIN_LEVEL_INV 	MAX_LEVEL_INV	PRODUCTION_0	PRODUCTION_1	PRODUCTION_2	PRODUCTION_3	PRODUCTION_4	PRODUCTION_5
+       0	123	177	       0	        100	            0	          408	          71	          71	          71	          71	          71	          71	
+CUSTOMER	X  	Y  	INV_COST	INITIAL_INV	MIN_LEVEL_INV 	MAX_LEVEL_INV	DEMAND_0	DEMAND_1	DEMAND_2	DEMAND_3	DEMAND_4	DEMAND_5
+       1	 31	 57	    0.27	          3	            0	           25	       8	       5	       5	       5	       7	       7
+       2	125	465	     0.1	          1	            0	           39	      11	       7	       7	      10	      13	      12
+       3	282	 49	    0.13	         13	            0	           29	       9	       5	       4	       6	       9	       6
+       4	 24	390	     0.1	          9	            0	           16	       6	       4	       3	       5	       6	       6
+       5	466	244	    0.14	          7	            0	           42	      12	       9	       6	       9	      10	      13
+       6	459	209	     0.1	          8	            0	           16	       6	       5	       4	       3	       6	       7
+       7	  8	401	    0.28	          4	            0	           19	       5	       5	       4	       5	       6	       8
+       8	432	419	    0.13	          2	            0	           22	       7	       5	       4	       8	       8	       8
+       9	267	133	    0.16	          5	            0	           20	       6	       5	       4	       4	       7	       8
+      10	207	487	    0.16	          6	            0	           26	      11	       7	       7	       8	      13	      14
+COST_MATRIX 
+	  0	  1	  2	  3	  4	  5	  6	  7	  8	  9	 10
+  0
+  1	 16
+  2	 29	 42
+  3	 21	 26	 45
+  4	 24	 34	 13	 43
+  5	 35	 48	 41	 27	 47
+  6	 34	 46	 43	 24	 48	  4
+  7	 26	 35	 14	 45	  2	 49	 50
+  8	 40	 55	 32	 40	 41	 18	 22	 43
+  9	 16	 25	 37	  9	 36	 23	 21	 38	 34
+ 10	 33	 47	  9	 45	 21	 36	 38	 22	 24	 36

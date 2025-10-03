@@ -1,0 +1,19 @@
+# Arquivo de configuração para o solver GA-ACO IRP
+
+# Parâmetros do Algoritmo Genético
+popSize = 100
+nGen = 1000
+pCrossover = 0.8
+pMutation = 0.05
+pLocalSearch = 1.0     
+tournamentK = 3
+stagnation_threshold = 25
+
+
+# Parâmetros da Colônia de Formigas (ACO)
+nAnts = 25
+nIter = 80
+alpha = 1.0
+beta = 2.0
+rho = 0.1
+Q = 1000.0

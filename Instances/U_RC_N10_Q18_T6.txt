@@ -1,0 +1,32 @@
+nVehicles:   5
+nDepots:     1
+nCustomers: 10
+nPeriods:    6
+VEHICLE_TYPE	FLEET_SIZE	CAPACITY
+           2	         5	      18	
+DEPOT   	X  	Y  	INV_COST	INITIAL_INV 	MIN_LEVEL_INV 	MAX_LEVEL_INV	PRODUCTION_0	PRODUCTION_1	PRODUCTION_2	PRODUCTION_3	PRODUCTION_4	PRODUCTION_5
+       0	 55	336	       0	        147	            0	          438	          76	          76	          76	          76	          76	          76	
+CUSTOMER	X  	Y  	INV_COST	INITIAL_INV	MIN_LEVEL_INV 	MAX_LEVEL_INV	DEMAND_0	DEMAND_1	DEMAND_2	DEMAND_3	DEMAND_4	DEMAND_5
+       1	132	115	    0.14	          8	            0	           23	       7	       9	       6	       6	       5	       6
+       2	185	117	     0.3	         10	            0	           25	      10	       8	       6	       5	       5	       6
+       3	161	136	     0.3	         12	            0	           16	       9	       7	       5	       6	       9	       7
+       4	111	137	     0.3	         14	            0	           17	      12	      10	       7	       6	       7	      12
+       5	154	136	    0.17	          8	            0	           18	      10	      10	       7	       5	       7	      11
+       6	402	153	    0.07	          6	            0	           36	       9	       8	       6	       5	       5	       6
+       7	292	382	    0.13	          3	            0	           42	      12	       8	       6	       8	       9	      10
+       8	421	216	    0.11	         12	            0	           29	      14	      12	       8	       7	      10	      12
+       9	218	395	    0.16	          7	            0	           22	       8	       7	       6	       6	       7	      10
+      10	447	226	    0.29	          7	            0	           25	       7	       4	       4	       4	       5	       5
+COST_MATRIX 
+	  0	  1	  2	  3	  4	  5	  6	  7	  8	  9	 10
+  0
+  1	 24
+  2	 26	  6
+  3	 23	  4	  4
+  4	 21	  4	  8	  6
+  5	 23	  4	  4	  1	  5
+  6	 40	 28	 22	 25	 30	 25
+  7	 25	 32	 29	 28	 31	 29	 26
+  8	 39	 31	 26	 28	 32	 28	  7	 22
+  9	 18	 30	 28	 27	 28	 27	 31	  8	 28
+ 10	 41	 34	 29	 30	 35	 31	  9	 22	  3	 29

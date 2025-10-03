@@ -1,0 +1,32 @@
+nVehicles:   2
+nDepots:     1
+nCustomers: 10
+nPeriods:    6
+VEHICLE_TYPE	FLEET_SIZE	CAPACITY
+           4	         2	      38	
+DEPOT   	X  	Y  	INV_COST	INITIAL_INV 	MIN_LEVEL_INV 	MAX_LEVEL_INV	PRODUCTION_0	PRODUCTION_1	PRODUCTION_2	PRODUCTION_3	PRODUCTION_4	PRODUCTION_5
+       0	 72	  9	       0	         67	            0	          394	          72	          72	          72	          72	          72	          72	
+CUSTOMER	X  	Y  	INV_COST	INITIAL_INV	MIN_LEVEL_INV 	MAX_LEVEL_INV	DEMAND_0	DEMAND_1	DEMAND_2	DEMAND_3	DEMAND_4	DEMAND_5
+       1	  7	334	    0.25	          8	            0	            8	       5	       4	       3	       4	       5	       5
+       2	  9	299	       0	          6	            0	           13	       7	       6	       5	       5	       8	       7
+       3	  8	308	    0.19	         10	            0	           28	      11	      10	       8	       9	      10	      10
+       4	  5	299	    0.28	          6	            0	           26	       7	       5	       4	       3	       3	       4
+       5	  1	313	    0.19	         13	            0	           29	      12	       8	       7	       6	       8	      11
+       6	 35	  8	    0.15	         11	            0	           35	       8	       9	       6	       6	       7	       9
+       7	 48	 22	    0.25	          5	            0	           31	       8	       5	       5	       5	       5	       8
+       8	 60	  8	    0.01	         11	            0	           15	       8	       6	       5	       5	       7	       7
+       9	 59	  7	    0.19	          8	            0	           21	      11	      11	       8	       8	       7	      10
+      10	 57	  8	       0	         15	            0	           26	      12	       7	       6	       8	      11	       9
+COST_MATRIX 
+	  0	  1	  2	  3	  4	  5	  6	  7	  8	  9	 10
+  0
+  1	 34
+  2	 30	  4
+  3	 31	  3	  1
+  4	 30	  4	  1	  1
+  5	 32	  3	  2	  1	  2
+  6	  4	 33	 30	 31	 30	 31
+  7	  3	 32	 28	 29	 29	 30	  2
+  8	  2	 34	 30	 31	 30	 32	  3	  2
+  9	  2	 34	 30	 31	 30	 32	  3	  2	  1
+ 10	  2	 33	 30	 31	 30	 32	  3	  2	  1	  1

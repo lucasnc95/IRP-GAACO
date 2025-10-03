@@ -1,0 +1,32 @@
+nVehicles:  10
+nDepots:     1
+nCustomers: 10
+nPeriods:    6
+VEHICLE_TYPE	FLEET_SIZE	CAPACITY
+           1	        10	       8	
+DEPOT   	X  	Y  	INV_COST	INITIAL_INV 	MIN_LEVEL_INV 	MAX_LEVEL_INV	PRODUCTION_0	PRODUCTION_1	PRODUCTION_2	PRODUCTION_3	PRODUCTION_4	PRODUCTION_5
+       0	454	418	       0	         80	            0	          382	          65	          65	          65	          65	          65	          65	
+CUSTOMER	X  	Y  	INV_COST	INITIAL_INV	MIN_LEVEL_INV 	MAX_LEVEL_INV	DEMAND_0	DEMAND_1	DEMAND_2	DEMAND_3	DEMAND_4	DEMAND_5
+       1	330	 14	    0.28	         10	            0	           36	       9	       6	      10	      13	      11	       8
+       2	308	 44	     0.1	         13	            0	           42	       7	       7	       6	       7	       9	       9
+       3	292	 46	    0.06	          9	            0	           17	       6	       5	       6	       6	       6	       6
+       4	308	 37	    0.15	          6	            0	           21	       5	       3	       4	       5	       6	       5
+       5	306	 35	     0.2	          6	            0	           23	       5	       4	       3	       4	       6	       5
+       6	281	327	    0.01	          9	            0	           14	       5	       4	       5	       7	       6	       6
+       7	461	491	    0.16	          3	            0	           36	       8	       8	       7	       8	       8	      10
+       8	495	442	    0.02	          7	            0	           12	       6	       5	       5	       7	       8	       8
+       9	327	436	    0.28	          8	            0	            8	       4	       4	       4	       5	       6	       7
+      10	391	104	    0.23	         11	            0	           24	       7	       6	       4	       7	       8	       8
+COST_MATRIX 
+	  0	  1	  2	  3	  4	  5	  6	  7	  8	  9	 10
+  0
+  1	212
+  2	201	 19
+  3	203	 25	  9
+  4	205	 16	  4	 10
+  5	206	 16	  5	  9	  2
+  6	 98	159	143	141	146	147
+  7	 37	248	237	239	240	241	122
+  8	 24	230	220	223	224	225	122	 30
+  9	 65	212	197	196	200	201	 60	 73	 85
+ 10	161	 55	 52	 58	 54	 55	125	197	177	170

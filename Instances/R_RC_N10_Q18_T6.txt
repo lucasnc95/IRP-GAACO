@@ -1,0 +1,32 @@
+nVehicles:   5
+nDepots:     1
+nCustomers: 10
+nPeriods:    6
+VEHICLE_TYPE	FLEET_SIZE	CAPACITY
+           2	         5	      18	
+DEPOT   	X  	Y  	INV_COST	INITIAL_INV 	MIN_LEVEL_INV 	MAX_LEVEL_INV	PRODUCTION_0	PRODUCTION_1	PRODUCTION_2	PRODUCTION_3	PRODUCTION_4	PRODUCTION_5
+       0	112	159	       0	         72	            0	          414	          72	          72	          72	          72	          72	          72	
+CUSTOMER	X  	Y  	INV_COST	INITIAL_INV	MIN_LEVEL_INV 	MAX_LEVEL_INV	DEMAND_0	DEMAND_1	DEMAND_2	DEMAND_3	DEMAND_4	DEMAND_5
+       1	 56	116	    0.18	          6	            0	           20	       5	       5	       5	       6	       9	       9
+       2	 25	119	    0.17	          6	            0	           26	       5	       4	       6	       9	       8	       8
+       3	 34	 75	     0.2	          7	            0	           25	       4	       3	       4	       5	       5	       4
+       4	 13	 97	    0.12	          5	            0	           47	       6	       6	      10	      11	      11	      10
+       5	 15	107	    0.14	          5	            0	           31	       4	       4	       5	       7	       6	       6
+       6	271	 38	    0.04	          7	            0	           38	       6	       5	       8	       9	      11	      11
+       7	369	412	    0.21	          4	            0	           18	       4	       4	       6	       8	       5	       4
+       8	167	299	    0.16	         11	            0	           11	       5	       6	       8	       8	      11	      10
+       9	 35	394	    0.17	          6	            0	           42	       6	       7	       8	      10	       8	       9
+      10	203	311	    0.04	          2	            0	           41	       7	       8	      10	      10	      13	      12
+COST_MATRIX 
+	  0	  1	  2	  3	  4	  5	  6	  7	  8	  9	 10
+  0
+  1	 36
+  2	 48	 16
+  3	 58	 24	 23
+  4	 59	 24	 13	 16
+  5	 56	 21	  8	 19	  6
+  6	100	115	130	120	133	133
+  7	181	216	226	238	238	234	194
+  8	 76	108	115	131	128	123	141	116
+  9	124	140	138	160	149	144	214	168	 82
+ 10	 89	123	131	146	144	139	141	 98	 19	 94

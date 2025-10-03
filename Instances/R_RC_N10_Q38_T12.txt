@@ -1,0 +1,32 @@
+nVehicles:   2
+nDepots:     1
+nCustomers: 10
+nPeriods:   12
+VEHICLE_TYPE	FLEET_SIZE	CAPACITY
+           4	         2	      38	
+DEPOT   	X  	Y  	INV_COST	INITIAL_INV 	MIN_LEVEL_INV 	MAX_LEVEL_INV	PRODUCTION_0	PRODUCTION_1	PRODUCTION_2	PRODUCTION_3	PRODUCTION_4	PRODUCTION_5	PRODUCTION_6	PRODUCTION_7	PRODUCTION_8	PRODUCTION_9	PRODUCTION_10	PRODUCTION_11
+       0	297	398	       0	         74	            0	          754	          66	          66	          66	          66	          66	          66	          66	          66	          66	          66	           66	           66	
+CUSTOMER	X  	Y  	INV_COST	INITIAL_INV	MIN_LEVEL_INV 	MAX_LEVEL_INV	DEMAND_0	DEMAND_1	DEMAND_2	DEMAND_3	DEMAND_4	DEMAND_5	DEMAND_6	DEMAND_7	DEMAND_8	DEMAND_9	DEMAND_10	DEMAND_11
+       1	158	316	    0.29	          2	            0	           69	       9	       7	       7	       9	      12	      11	       8	       6	       6	      10	       13	       12
+       2	140	344	    0.12	          7	            0	           18	       7	       5	       6	       8	      10	      10	       8	       6	       6	       5	        7	        8
+       3	149	314	    0.03	          1	            0	           36	       5	       5	       5	       6	       8	       8	       6	       5	       5	       7	        8	        7
+       4	145	315	    0.27	          1	            0	           21	       6	       4	       5	       6	       7	       9	       9	       6	       4	       4	        5	        6
+       5	150	318	    0.29	          6	            0	           42	       5	       4	       5	       8	       8	       7	       5	       5	       5	       6	        9	        7
+       6	249	120	    0.09	          1	            0	          102	       7	       7	       7	       9	      11	       8	       7	       6	       8	      11	       11	       10
+       7	296	224	    0.07	          7	            0	           54	       4	       4	       4	       6	       5	       7	       7	       5	       5	       4	        4	        7
+       8	120	 26	    0.17	          7	            0	           27	       4	       4	       4	       5	       6	       5	       4	       3	       4	       3	        5	        5
+       9	406	483	    0.07	          5	            0	           47	       4	       4	       6	       6	       6	       4	       4	       5	       7	       7	        4	        4
+      10	445	 74	    0.05	          8	            0	           70	       8	       5	       7	      10	       9	       8	       6	       6	       9	      10	        8	        5
+COST_MATRIX 
+	  0	  1	  2	  3	  4	  5	  6	  7	  8	  9	 10
+  0
+  1	 81
+  2	 84	 17
+  3	 86	  5	 16
+  4	 87	  7	 15	  3
+  5	 84	  5	 14	  3	  3
+  6	142	109	125	110	111	111
+  7	 88	 83	 99	 87	 89	 87	 58
+  8	206	147	160	145	146	147	 80	133
+  9	 70	150	151	154	156	153	198	141	270
+ 10	179	188	204	191	193	192	101	106	165	206

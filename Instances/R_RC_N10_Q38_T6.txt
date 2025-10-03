@@ -1,0 +1,32 @@
+nVehicles:   2
+nDepots:     1
+nCustomers: 10
+nPeriods:    6
+VEHICLE_TYPE	FLEET_SIZE	CAPACITY
+           4	         2	      38	
+DEPOT   	X  	Y  	INV_COST	INITIAL_INV 	MIN_LEVEL_INV 	MAX_LEVEL_INV	PRODUCTION_0	PRODUCTION_1	PRODUCTION_2	PRODUCTION_3	PRODUCTION_4	PRODUCTION_5
+       0	 65	435	       0	        101	            0	          352	          65	          65	          65	          65	          65	          65	
+CUSTOMER	X  	Y  	INV_COST	INITIAL_INV	MIN_LEVEL_INV 	MAX_LEVEL_INV	DEMAND_0	DEMAND_1	DEMAND_2	DEMAND_3	DEMAND_4	DEMAND_5
+       1	449	117	    0.16	          3	            0	           24	       6	       6	       6	       4	       4	       4
+       2	434	 96	    0.18	          3	            0	           20	       7	       7	       5	       4	       5	       6
+       3	438	105	    0.22	          7	            0	           24	       8	       6	       6	       5	       4	       4
+       4	434	105	    0.02	         10	            0	           28	       9	       8	       8	       7	       6	       7
+       5	437	 90	    0.04	          7	            0	           13	       7	       6	       5	       4	       5	       5
+       6	162	257	    0.01	          7	            0	           34	       9	       7	       8	       4	       5	       6
+       7	 37	359	    0.24	          2	            0	           15	       4	       5	       4	       4	       4	       6
+       8	223	241	    0.12	          6	            0	           29	      10	      13	      11	       6	       8	      10
+       9	 29	278	    0.26	          5	            0	           35	       9	       9	       7	       7	       8	       9
+      10	316	 35	    0.13	         13	            0	           30	       9	      10	       7	       5	       5	       6
+COST_MATRIX 
+	  0	  1	  2	  3	  4	  5	  6	  7	  8	  9	 10
+  0
+  1	250
+  2	251	 13
+  3	250	  9	  5
+  4	248	 10	  5	  3
+  5	254	 15	  4	  8	  8
+  6	102	160	159	158	156	161
+  7	 41	239	239	238	236	242	 81
+  8	126	129	129	128	126	131	 32	111
+  9	 81	225	223	223	221	225	 68	 41	 99
+ 10	237	 79	 67	 71	 69	 67	136	214	114	189
