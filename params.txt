@@ -4,7 +4,7 @@
 popSize = 100
 nGen = 1000
 pCrossover = 0.8
-pMutation = 0.05
+pMutation = 0.25
 pLocalSearch = 1.0     
 tournamentK = 3
 stagnation_threshold = 25

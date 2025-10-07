@@ -4,7 +4,8 @@
 #include <iomanip>
 #include <cstdlib>
 #include <math.h>
-
+#include <map>
+#include <algorithm>
 using std::vector;
 
 void IRP::readDataFromFile(const std::string& filename) {
@@ -124,33 +125,32 @@ void IRP::readDataFromArchettiFile(const std::string& filename) {
         exit(EXIT_FAILURE);
     }
     
-    // Limpa dados de instâncias anteriores
     depots.clear();
     customers.clear();
     costMatrix.clear();
     
-    // Lê o cabeçalho
-    int n_retailers;
-    file >> n_retailers >> this->nPeriods >> this->Capacity;
-    this->nCustomers = n_retailers;
-    this->nDepots = 1; // Formato sempre tem 1 depósito
+    int n_locations;
+    file >> n_locations >> this->nPeriods >> this->Capacity;
     
-    // <-- MUDANÇA: O número de veículos é fixo em 1 para este conjunto de instâncias -->
+    // <-- CORREÇÃO CRÍTICA: O número de clientes é o total de locais - 1 -->
+    this->nCustomers = n_locations - 1;
+    this->nDepots = 1;
     this->nVehicles = 1; 
     this->Fleet_Size = 1; 
     
-    // Armazena temporariamente as coordenadas para calcular a matriz de custos depois
-    vector<std::pair<double, double>> coords;
+    std::map<int, std::pair<double, double>> coords_map;
 
     // Lê os dados do depósito (supplier)
     Depot depot;
+    int depot_id_from_file;
     int depot_prod_per_period;
-    file >> depot.id >> depot.x >> depot.y >> depot.initialInv >> depot_prod_per_period >> depot.invCost;
-    depot.minLevelInv = 0; // Não especificado, assumimos 0
-    depot.maxLevelInv = depot.initialInv * 100; // Não especificado, assumimos um valor grande
-    depot.production.assign(this->nPeriods, depot_prod_per_period); // Produção é constante
+    file >> depot_id_from_file >> depot.x >> depot.y >> depot.initialInv >> depot_prod_per_period >> depot.invCost;
+    depot.id = depot_id_from_file;
+    depot.minLevelInv = 0;
+    depot.maxLevelInv = depot.initialInv * 100;
+    depot.production.assign(this->nPeriods, depot_prod_per_period);
     depots.push_back(depot);
-    coords.push_back({depot.x, depot.y});
+    coords_map[depot.id] = {depot.x, depot.y};
 
     // Lê os dados dos clientes (retailers)
     for (int i = 0; i < this->nCustomers; ++i) {
@@ -160,25 +160,34 @@ void IRP::readDataFromArchettiFile(const std::string& filename) {
              >> customer.initialInv >> customer.maxLevelInv >> customer.minLevelInv
              >> customer_demand_per_period >> customer.invCost;
         
-        customer.demand.assign(this->nPeriods, customer_demand_per_period); // Demanda é constante
+        customer.demand.assign(this->nPeriods, customer_demand_per_period);
         customers.push_back(customer);
-        coords.push_back({customer.x, customer.y});
+        coords_map[customer.id] = {customer.x, customer.y};
     }
 
     file.close();
 
     // --- Calcula a Matriz de Custos ---
-    int matrixSize = 1 + this->nCustomers; // 1 depósito + N clientes
+    int matrixSize = 1 + this->nCustomers;
     costMatrix.resize(matrixSize, std::vector<double>(matrixSize));
+
+    std::vector<int> index_to_id_map(matrixSize);
+    index_to_id_map[0] = depots[0].id;
+    for(int i = 0; i < nCustomers; ++i) {
+        index_to_id_map[i+1] = customers[i].id;
+    }
 
     for (int i = 0; i < matrixSize; ++i) {
         for (int j = 0; j < matrixSize; ++j) {
             if (i == j) {
                 costMatrix[i][j] = 0;
             } else {
-                double dx = coords[i].first - coords[j].first;
-                double dy = coords[i].second - coords[j].second;
-                // Distância Euclidiana arredondada para o inteiro mais próximo (NINT)
+                int id_i = index_to_id_map[i];
+                int id_j = index_to_id_map[j];
+                
+                double dx = coords_map.at(id_i).first - coords_map.at(id_j).first;
+                double dy = coords_map.at(id_i).second - coords_map.at(id_j).second;
+                
                 costMatrix[i][j] = std::round(std::sqrt(dx*dx + dy*dy));
             }
         }
