@@ -47,10 +47,8 @@ int main(int argc, char** argv) {
     IRP irp;
     std::string extension = instance_file.substr(instance_file.find_last_of(".") + 1);
     if (extension == "dat") {
-        std::cout << "Detectado formato de arquivo '.dat' (Archetti et al.). Lendo instância..." << std::endl;
         irp.readDataFromArchettiFile(instance_file);
     } else {
-        std::cout << "Detectado formato de arquivo '.irp'. Lendo instância..." << std::endl;
         irp.readDataFromFile(instance_file);
     }
     
@@ -69,37 +67,33 @@ int main(int argc, char** argv) {
               << " Alpha: " << aco_params.alpha
               << ", Beta: " << aco_params.beta << ", Rho: " << aco_params.rho 
               << ", Q: " << aco_params.Q << "\n";
-    irp.printData();
+
     Individual bestOverall = run_genetic_algorithm(irp, ga_params, aco_params, verbose_mode);
 
     std::cout << "\n=== Resumo da solução ===\n";
     std::cout << "Matriz de entregas da melhor solução:\n";
     printDeliveriesMatrix(bestOverall, irp);
 
-    EvaluationResult final_result = simulate_and_evaluate(bestOverall, irp, aco_params);
-
     std::cout << "\n--- Análise de Custos ---\n";
     std::cout << std::fixed << std::setprecision(2);
-    std::cout << "  Custo total roteamento: ................... " << final_result.routing_cost << "\n";
-    std::cout << "  Custo total armazenagem (clientes): ...... " << final_result.customer_holding_cost << "\n";
-    std::cout << "  Custo total armazenagem (depósito): ...... " << final_result.depot_holding_cost << "\n";
+    std::cout << "  Custo total roteamento: ................... " << bestOverall.routing_cost << "\n";
+    std::cout << "  Custo total armazenagem (clientes): ...... " << bestOverall.customer_holding_cost << "\n";
+    std::cout << "  Custo total armazenagem (depósito): ...... " << bestOverall.depot_holding_cost << "\n";
+    std::cout << "  Penalidade (Estoque Final > 0): .......... " << bestOverall.final_inventory_penalty << "\n";
     std::cout << "  --------------------------------------------------\n";
-    std::cout << "  Custo Operacional Total (Fitness Final): .. " << final_result.operational_cost() << "\n";
-    std::cout << "  Solução é FACTÍVEL\n";
+    std::cout << "  Custo Total (Fitness Final): ............ " << bestOverall.fitness << "\n";
+    std::cout << "  Solução é " << (bestOverall.is_feasible ? "FACTÍVEL" : "INFACTÍVEL") << "\n";
 
-    std::cout << "\n--- Exemplo de Rotas por Período ---\n";
+    std::cout << "\n--- Rotas da Melhor Solução por Período ---\n";
     for (int t = 0; t < irp.nPeriods; ++t) {
-        const auto& del = bestOverall.deliveries[t];
-        long sumD = std::accumulate(del.begin(), del.end(), 0L);
         std::cout << "Periodo " << t << ":\n";
-        if (sumD == 0) {
+        if (bestOverall.routes_per_period[t].empty()) {
             std::cout << "  sem entregas.\n";
         } else {
-            ACO_Result res = runACO_for_period(irp, del, aco_params, false);
-            for (size_t r = 0; r < res.bestRoutes.size(); ++r) {
+            for (size_t r = 0; r < bestOverall.routes_per_period[t].size(); ++r) {
                 std::cout << "    Rota " << r << ": ";
-                for (size_t i = 0; i < res.bestRoutes[r].size(); ++i) {
-                    std::cout << res.bestRoutes[r][i] << (i + 1 < res.bestRoutes[r].size() ? " " : "");
+                for (size_t i = 0; i < bestOverall.routes_per_period[t][r].size(); ++i) {
+                    std::cout << bestOverall.routes_per_period[t][r][i] << (i + 1 < bestOverall.routes_per_period[t][r].size() ? " " : "");
                 }
                 std::cout << "\n";
             }

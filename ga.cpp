@@ -143,39 +143,16 @@ double evaluateIndividual(
     return final_fitness;
 }
 
-// Individual makeRandomIndividual(const IRP& irp) {
-//     Individual ind;
-//     int T = irp.nPeriods;
-//     int nCust = irp.nCustomers;
-//     ind.deliveries.assign(T, vector<int>(nCust, 0));
-//     ind.fitness = 1e18;
-    
-//     vector<int> current_inv(nCust);
-//     for(int i = 0; i < nCust; ++i) current_inv[i] = irp.customers[i].initialInv;
-
-//     for (int t = 0; t < T; ++t) {
-//         vector<int> empty_candidate(nCust, 0);
-//         vector<int> repaired = repair_period_row(empty_candidate, current_inv, t, irp);
-//         ind.deliveries[t] = repaired;
-//         for (int c = 0; c < nCust; ++c) {
-//             current_inv[c] += repaired[c] - irp.customers[c].demand[t];
-//         }
-//     }
-//     return ind;
-// }
 
 Individual crossover(const Individual& a, const Individual& b, const IRP& irp) {
-    Individual child = a; // Começa como uma cópia do Pai A
-
-    // Sorteia um ponto de corte (um cliente)
+    Individual child(irp.nPeriods, irp.nCustomers); 
     int crosspoint = randint(0, irp.nCustomers - 1);
-
-    // A partir do ponto de corte, copia as "colunas" (plano de entregas do cliente) do Pai B
-    for (int c = crosspoint; c < irp.nCustomers; ++c) {
-        for (int t = 0; t < irp.nPeriods; ++t) {
-            child.deliveries[t][c] = b.deliveries[t][c];
+    for (int t = 0; t < irp.nPeriods; ++t) {
+        for (int c = 0; c < irp.nCustomers; ++c) {
+            child.deliveries[t][c] = (c < crosspoint) ? a.deliveries[t][c] : b.deliveries[t][c];
         }
     }
+    // As rotas e custos do filho estão vazios/inválidos por padrão
     return child;
 }
 
@@ -298,53 +275,10 @@ void delivery_delay_mutation(Individual& ind, const IRP& irp) {
 }
 
 
-// <-- MUDANÇA: Nova mutação de adiantamento -->
-void delivery_advance_mutation(Individual& ind, const IRP& irp) {
-    vector<int> customer_indices(irp.nCustomers);
-    std::iota(customer_indices.begin(), customer_indices.end(), 0);
-    std::shuffle(customer_indices.begin(), customer_indices.end(), rng);
 
-    for (int c : customer_indices) {
-        for (int t = 1; t < irp.nPeriods; ++t) {
-            int q_to_move = ind.deliveries[t][c];
-            if (q_to_move == 0) continue;
-
-            int existing_delivery_t_minus_1 = ind.deliveries[t-1][c];
-
-            if (q_to_move + existing_delivery_t_minus_1 > irp.Capacity) continue;
-            
-            // Simula para checar factibilidade
-            bool is_feasible = true;
-            vector<int> temp_deliveries_c(irp.nPeriods);
-            for(int p=0; p < irp.nPeriods; ++p) temp_deliveries_c[p] = ind.deliveries[p][c];
-
-            temp_deliveries_c[t] = 0;
-            temp_deliveries_c[t-1] += q_to_move;
-
-            long current_inv = irp.customers[c].initialInv;
-            for(int p=0; p < irp.nPeriods; ++p) {
-                if (current_inv + temp_deliveries_c[p] > irp.customers[c].maxLevelInv) {
-                    is_feasible = false;
-                    break;
-                }
-                current_inv += (long)temp_deliveries_c[p] - irp.customers[c].demand[p];
-                if (current_inv < irp.customers[c].minLevelInv) {
-                    is_feasible = false;
-                    break;
-                }
-            }
-
-            if (is_feasible) {
-                ind.deliveries[t][c] = 0;
-                ind.deliveries[t-1][c] += q_to_move;
-                return; // First improvement
-            }
-        }
-    }
-}
 
 Individual make_stock_up_individual(const IRP& irp) {
-    Individual ind;
+    Individual ind(irp.nPeriods, irp.nCustomers);
     ind.deliveries.assign(irp.nPeriods, vector<int>(irp.nCustomers, 0));
     repair_individual(ind, irp); // Repara um indivíduo vazio, forçando uma solução factível
     return ind;
@@ -352,7 +286,7 @@ Individual make_stock_up_individual(const IRP& irp) {
 
 // Estratégia "Just-in-Time"
 Individual make_just_in_time_individual(const IRP& irp) {
-    Individual ind;
+ Individual ind(irp.nPeriods, irp.nCustomers); 
     ind.deliveries.assign(irp.nPeriods, vector<int>(irp.nCustomers, 0));
     ind.fitness = 1e18;
 
@@ -411,8 +345,11 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
     // Avaliação Inicial
     std::cout << "Avaliando população inicial..." << std::endl;
     for (size_t i = 0; i < pop.size(); ++i) {
+        if (verbose) {
+            std::cout << "[Gen 0] Avaliando Indivíduo " << i + 1 << "/" << pop.size() << "..." << std::endl;
+        }
         EvaluationResult res = simulate_and_evaluate(pop[i], irp, aco_params);
-        pop[i].fitness = res.operational_cost();
+        pop[i].fitness = res.total_fitness();
     }
 
     Individual bestOverall = *std::min_element(pop.begin(), pop.end(), 
@@ -429,14 +366,13 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
         while ((int)newPop.size() < ga_params.popSize) {
             Individual parent1 = tournamentSelect(pop, ga_params.tournamentK);
             Individual parent2 = tournamentSelect(pop, ga_params.tournamentK);
-            
             Individual child = crossover(parent1, parent2, irp);
             
             if (randreal() < ga_params.pMutation) {
                 advance_portion_mutation(child, irp);
             }
             
-            // <-- MUDANÇA: Verificação de factibilidade da frota ANTES da avaliação completa -->
+            // A verificação de factibilidade da frota é feita antes da avaliação completa
             bool fleet_capacity_ok = true;
             long total_fleet_capacity = (long)irp.nVehicles * irp.Capacity;
             for (int t = 0; t < irp.nPeriods; ++t) {
@@ -448,15 +384,13 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
             }
 
             if (fleet_capacity_ok) {
-                // Se for factível, procede com a avaliação completa e cara
                 if (verbose) {
                     std::cout << "[Gen " << gen + 1 << "] Avaliando Indivíduo " << newPop.size() + 1 << "/" << ga_params.popSize << "..." << std::endl;
                 }
                 EvaluationResult res = simulate_and_evaluate(child, irp, aco_params);
-                child.fitness = res.operational_cost();
+                child.fitness = res.total_fitness();
             } else {
-                // Se for infactível, atribui uma "pena de morte" e não gasta tempo avaliando
-                child.fitness = 1e18; // Um valor de fitness extremamente alto
+                child.fitness = 1e18; // Pena de morte
             }
             
             newPop.push_back(child);
@@ -498,7 +432,7 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
 
             for(size_t i = 1; i < restarted_pop.size(); ++i) {
                  EvaluationResult res = simulate_and_evaluate(restarted_pop[i], irp, aco_params);
-                 restarted_pop[i].fitness = res.operational_cost();
+                 restarted_pop[i].fitness = res.total_fitness();
             }
             
             pop = restarted_pop;
