@@ -35,7 +35,7 @@ void load_parameters_from_file(const std::string& filename, GA_Params& ga_params
             trim(key);
             trim(value);
 
-            try {
+ try {
                 // Parâmetros do GA
                 if (key == "popSize") ga_params.popSize = std::stoi(value);
                 else if (key == "nGen") ga_params.nGen = std::stoi(value);
@@ -43,6 +43,7 @@ void load_parameters_from_file(const std::string& filename, GA_Params& ga_params
                 else if (key == "pMutation") ga_params.pMutation = std::stod(value);
                 else if (key == "tournamentK") ga_params.tournamentK = std::stoi(value);
                 else if (key == "stagnation_threshold") ga_params.stagnation_threshold = std::stoi(value);
+                else if (key == "crossover_max_tries") ga_params.crossover_max_tries = std::stoi(value);
                 // Parâmetros do ACO
                 else if (key == "nAnts") aco_params.nAnts = std::stoi(value);
                 else if (key == "nIter") aco_params.nIter = std::stoi(value);

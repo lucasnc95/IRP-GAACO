@@ -7,12 +7,11 @@
 struct GA_Params {
     int popSize = 40;
     int nGen = 200;
-    double pCrossover = 0.8;
-    double pMutation = 0.15;
-    double pMutationDelay = 0.1;
-    double pMutationAdvance = 0.1;
+    double pCrossover = 0.9;
+    double pMutation = 0.15; // Probabilidade da mutação simples
     int tournamentK = 3;
     int stagnation_threshold = 20;
+    int crossover_max_tries = 10; // Tentativas para gerar filho factível
 };
 
 // Parâmetros do ACO

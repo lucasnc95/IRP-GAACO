@@ -59,6 +59,7 @@ int main(int argc, char** argv) {
     std::cout << " População: " << ga_params.popSize << ", Gerações: " << ga_params.nGen 
               << ", Limite Estagnação: " << ga_params.stagnation_threshold << "\n"
               << " Crossover: " << ga_params.pCrossover << ", Mutação: " << ga_params.pMutation 
+              << ", Tentativas Crossover: " << ga_params.crossover_max_tries
               << ", Torneio K: " << ga_params.tournamentK << "\n";
               
     std::cout << "--- Parâmetros do ACO ---\n";

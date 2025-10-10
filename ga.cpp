@@ -103,120 +103,106 @@ void repair_individual(Individual& ind, const IRP& irp) {
     }
 }
 
-double calculate_population_variability(const std::vector<Individual>& pop) {
-    if (pop.size() < 2) {
-        return 0.0;
-    }
+Individual make_simple_random_individual(const IRP& irp) {
+    Individual ind(irp.nPeriods, irp.nCustomers);
+    vector<long> current_inv(irp.nCustomers);
+    for(int i = 0; i < irp.nCustomers; ++i) current_inv[i] = irp.customers[i].initialInv;
 
-    double total_distance = 0.0;
-    int num_pairs = 0;
-    
-    for (size_t i = 0; i < pop.size(); ++i) {
-        for (size_t j = i + 1; j < pop.size(); ++j) {
-            double distance = 0.0;
-            // Calcula a soma das diferenças absolutas (Distância de Manhattan) entre duas matrizes
-            for (size_t t = 0; t < pop[i].deliveries.size(); ++t) {
-                for (size_t c = 0; c < pop[i].deliveries[t].size(); ++c) {
-                    distance += std::abs(pop[i].deliveries[t][c] - pop[j].deliveries[t][c]);
+    long fleet_capacity = (long)irp.nVehicles * irp.Capacity;
+
+    for (int t = 0; t < irp.nPeriods; ++t) {
+        long period_load = 0;
+        vector<int> mandatory_custs, optional_custs;
+
+        for (int c = 0; c < irp.nCustomers; ++c) {
+            if (current_inv[c] < irp.customers[c].demand[t]) {
+                mandatory_custs.push_back(c);
+            } else {
+                optional_custs.push_back(c);
+            }
+        }
+
+        // Atende clientes obrigatórios
+        for (int c : mandatory_custs) {
+            long needed = irp.customers[c].demand[t] - current_inv[c];
+            long space = irp.customers[c].maxLevelInv - (current_inv[c] + needed);
+            int extra = (space > 0) ? randint(0, std::min((long)20, space)) : 0; // Adiciona um extra aleatório pequeno
+            int q = std::min((long)irp.Capacity, needed + extra);
+            
+            if (period_load + q <= fleet_capacity) {
+                ind.deliveries[t][c] = q;
+                period_load += q;
+            }
+        }
+        
+        // Atende clientes opcionais aleatoriamente
+        std::shuffle(optional_custs.begin(), optional_custs.end(), rng);
+        for (int c : optional_custs) {
+            if (period_load >= fleet_capacity) break;
+            if (randreal() < 0.3) { // Chance de atender um cliente opcional
+                long space = irp.customers[c].maxLevelInv - current_inv[c];
+                long max_q = std::min({space, (long)irp.Capacity, fleet_capacity - period_load});
+                if (max_q > 0) {
+                    int q = randint(1, max_q);
+                    ind.deliveries[t][c] = q;
+                    period_load += q;
                 }
             }
-            total_distance += distance;
-            num_pairs++;
         }
-    }
-    return total_distance / num_pairs;
-}
 
-double evaluateIndividual(
-    const Individual& ind, 
-    const IRP& irp, 
-    const ACO_Params& aco_params, 
-    bool verbose
-) {
-    EvaluationResult result = simulate_and_evaluate(ind, irp, aco_params);
-    double final_fitness = result.operational_cost();
-    
-    if(verbose) {
-        std::cout << "  - Fitness final avaliado: " << final_fitness << std::endl;
-    }
-
-    return final_fitness;
-}
-
-
-Individual crossover(const Individual& a, const Individual& b, const IRP& irp) {
-    Individual child(irp.nPeriods, irp.nCustomers); 
-    int crosspoint = randint(0, irp.nCustomers - 1);
-    for (int t = 0; t < irp.nPeriods; ++t) {
+        // Atualiza o inventário para o próximo período
         for (int c = 0; c < irp.nCustomers; ++c) {
-            child.deliveries[t][c] = (c < crosspoint) ? a.deliveries[t][c] : b.deliveries[t][c];
+            current_inv[c] += (long)ind.deliveries[t][c] - irp.customers[c].demand[t];
         }
     }
-    // As rotas e custos do filho estão vazios/inválidos por padrão
+    return ind;
+}
+
+
+// NOVOS OPERADORES DE CROSSOVER
+Individual one_point_crossover_customer(const Individual& a, const Individual& b, const IRP& irp) {
+    Individual child(irp.nPeriods, irp.nCustomers);
+    int crosspoint = randint(0, irp.nCustomers);
+    for (int c = 0; c < irp.nCustomers; ++c) {
+        const Individual& source = (c < crosspoint) ? a : b;
+        for (int t = 0; t < irp.nPeriods; ++t) {
+            child.deliveries[t][c] = source.deliveries[t][c];
+        }
+    }
     return child;
 }
 
-void raw_mutate(Individual& ind, const IRP& irp, double pMut) {
-    for (int t = 0; t < irp.nPeriods; ++t) {
-        for (int c = 0; c < irp.nCustomers; ++c) {
-            if (randreal() < pMut) {
-                int max_q = irp.customers[c].maxLevelInv;
-                int current_q = ind.deliveries[t][c];
-                int change = randint(-current_q, max_q / 4);
-                int new_q = std::max(0, current_q + change);
-                ind.deliveries[t][c] = new_q;
-            }
+Individual two_point_crossover_customer(const Individual& a, const Individual& b, const IRP& irp) {
+    Individual child(irp.nPeriods, irp.nCustomers);
+    int p1 = randint(0, irp.nCustomers);
+    int p2 = randint(0, irp.nCustomers);
+    if (p1 > p2) std::swap(p1, p2);
+
+    for (int c = 0; c < irp.nCustomers; ++c) {
+        const Individual& source = (c >= p1 && c < p2) ? b : a;
+        for (int t = 0; t < irp.nPeriods; ++t) {
+            child.deliveries[t][c] = source.deliveries[t][c];
         }
     }
+    return child;
 }
 
-void advance_portion_mutation(Individual& ind, const IRP& irp) {
-    // 1. Escolhe um cliente aleatório
+// NOVA E ÚNICA MUTAÇÃO
+void simple_random_mutation(Individual& ind, const IRP& irp) {
+    int t = randint(0, irp.nPeriods - 1);
     int c = randint(0, irp.nCustomers - 1);
-
-    // 2. Encontra os períodos onde uma entrega ocorre (e pode ser adiantada)
-    vector<int> possible_source_periods;
-    for (int t = 1; t < irp.nPeriods; ++t) {
-        if (ind.deliveries[t][c] > 0) {
-            possible_source_periods.push_back(t);
-        }
-    }
-    if (possible_source_periods.empty()) return; // Nada a fazer
-
-    int t_source = possible_source_periods[randint(0, possible_source_periods.size() - 1)];
     
-    // 3. Encontra um período de destino anterior
-    if (t_source == 0) return; // Não pode adiantar do período 0
-    int t_dest = randint(0, t_source - 1);
-
-    // 4. Sorteia uma quantidade a ser movida
-    int q_available = ind.deliveries[t_source][c];
-    if (q_available <= 0) return;
-    int q_move = randint(1, q_available);
-
-    // 5. Verifica a factibilidade do movimento
-    // 5.1 Checagem de capacidade da frota no período de destino
-    long current_dest_load = 0;
-    for (int cust = 0; cust < irp.nCustomers; ++cust) {
-        current_dest_load += ind.deliveries[t_dest][cust];
-    }
-    if (current_dest_load + q_move > (long)irp.nVehicles * irp.Capacity) {
-        return; // Falha na checagem de capacidade da frota
+    long current_inv = irp.customers[c].initialInv;
+    for(int p = 0; p < t; ++p) {
+        current_inv += (long)ind.deliveries[p][c] - irp.customers[c].demand[p];
     }
 
-    // 5.2 Checagem de capacidade do armazém do cliente no período de destino
-    long inv_at_start_of_dest = irp.customers[c].initialInv;
-    for (int p = 0; p < t_dest; ++p) {
-        inv_at_start_of_dest += (long)ind.deliveries[p][c] - irp.customers[c].demand[p];
+    long space = irp.customers[c].maxLevelInv - current_inv;
+    if (space > 0) {
+        ind.deliveries[t][c] = randint(0, std::min({space, (long)irp.Capacity}));
     }
-    if (inv_at_start_of_dest + ind.deliveries[t_dest][c] + q_move > irp.customers[c].maxLevelInv) {
-        return; // Falha na checagem de capacidade do armazém
-    }
-
-    // 6. Se factível, aplica o movimento
-    ind.deliveries[t_source][c] -= q_move;
-    ind.deliveries[t_dest][c] += q_move;
 }
+
 
 Individual tournamentSelect(const vector<Individual>& pop, int k) {
     int n = pop.size();
@@ -230,126 +216,21 @@ Individual tournamentSelect(const vector<Individual>& pop, int k) {
     return pop[best_idx];
 }
 
-void delivery_delay_mutation(Individual& ind, const IRP& irp) {
-    vector<int> customer_indices(irp.nCustomers);
-    std::iota(customer_indices.begin(), customer_indices.end(), 0);
-    std::shuffle(customer_indices.begin(), customer_indices.end(), rng);
-    
-    for (int c : customer_indices) {
-        for (int t = 0; t < irp.nPeriods - 1; ++t) {
-            int q_to_move = ind.deliveries[t][c];
-            if (q_to_move == 0) continue;
-
-            int existing_delivery_t_plus_1 = ind.deliveries[t+1][c];
-
-            // Checa se a soma das entregas cabe em um único veículo
-            if (q_to_move + existing_delivery_t_plus_1 > irp.Capacity) continue;
-
-            // Simula a evolução do estoque para checar factibilidade
-            bool is_feasible = true;
-            long current_inv = (t > 0) ? (long)irp.customers[c].initialInv : irp.customers[c].initialInv;
-            if (t > 0) {
-                for(int p=0; p < t; ++p) current_inv += (long)ind.deliveries[p][c] - irp.customers[c].demand[p];
-            }
-            
-            // Checa o período de origem (t)
-            if (current_inv - irp.customers[c].demand[t] < irp.customers[c].minLevelInv) {
-                is_feasible = false;
-            }
-            
-            // Checa o período de destino (t+1)
-            if(is_feasible) {
-                long inv_at_start_t1 = current_inv - irp.customers[c].demand[t];
-                if(inv_at_start_t1 + q_to_move + existing_delivery_t_plus_1 > irp.customers[c].maxLevelInv) {
-                    is_feasible = false;
-                }
-            }
-
-            if (is_feasible) {
-                ind.deliveries[t][c] = 0;
-                ind.deliveries[t+1][c] += q_to_move;
-                return; // First improvement
-            }
-        }
-    }
-}
-
-
-
-
-Individual make_stock_up_individual(const IRP& irp) {
-    Individual ind(irp.nPeriods, irp.nCustomers);
-    ind.deliveries.assign(irp.nPeriods, vector<int>(irp.nCustomers, 0));
-    repair_individual(ind, irp); // Repara um indivíduo vazio, forçando uma solução factível
-    return ind;
-}
-
-// Estratégia "Just-in-Time"
-Individual make_just_in_time_individual(const IRP& irp) {
- Individual ind(irp.nPeriods, irp.nCustomers); 
-    ind.deliveries.assign(irp.nPeriods, vector<int>(irp.nCustomers, 0));
-    ind.fitness = 1e18;
-
-    vector<long> current_inv(irp.nCustomers);
-    for(int i = 0; i < irp.nCustomers; ++i) {
-        current_inv[i] = irp.customers[i].initialInv;
-    }
-
-    long fleet_capacity = (long)irp.nVehicles * irp.Capacity;
-
-    for (int t = 0; t < irp.nPeriods; ++t) {
-        vector<int> deliveries_t(irp.nCustomers, 0);
-        long current_period_load = 0;
-
-        for (int c = 0; c < irp.nCustomers; ++c) {
-            long inv_after_consumption = current_inv[c] - irp.customers[c].demand[t];
-            
-            if (inv_after_consumption < irp.customers[c].minLevelInv) {
-                long needed = irp.customers[c].minLevelInv - inv_after_consumption;
-                long space_available = irp.customers[c].maxLevelInv - current_inv[c];
-                long delivery_amount = std::min(needed, space_available);
-
-                if (delivery_amount > irp.Capacity) delivery_amount = irp.Capacity;
-
-                if (current_period_load + delivery_amount <= fleet_capacity) {
-                    deliveries_t[c] = delivery_amount;
-                    current_period_load += delivery_amount;
-                }
-            }
-        }
-        
-        ind.deliveries[t] = deliveries_t;
-        for (int c = 0; c < irp.nCustomers; ++c) {
-            current_inv[c] += (long)ind.deliveries[t][c] - irp.customers[c].demand[t];
-        }
-    }
-    return ind;
-}
-
-
 Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, const ACO_Params& aco_params, bool verbose) {
     vector<Individual> pop;
     pop.reserve(ga_params.popSize);
     
-    // Geração da População Inicial
-    int half_pop = ga_params.popSize / 2;
-    std::cout << "Inicializando " << half_pop << " indivíduos com a estratégia 'Stock-Up'..." << std::endl;
-    for (int i = 0; i < half_pop; ++i) {
-        pop.push_back(make_stock_up_individual(irp));
-    }
-    std::cout << "Inicializando " << (ga_params.popSize - half_pop) << " indivíduos com a estratégia 'Just-in-Time'..." << std::endl;
-    for (int i = 0; i < (ga_params.popSize - half_pop); ++i) {
-        pop.push_back(make_just_in_time_individual(irp));
+    std::cout << "Inicializando população..." << std::endl;
+    while(pop.size() < ga_params.popSize) {
+        Individual ind = make_simple_random_individual(irp);
+        if (check_feasibility(ind, irp)) {
+            pop.push_back(ind);
+        }
     }
 
-    // Avaliação Inicial
     std::cout << "Avaliando população inicial..." << std::endl;
-    for (size_t i = 0; i < pop.size(); ++i) {
-        if (verbose) {
-            std::cout << "[Gen 0] Avaliando Indivíduo " << i + 1 << "/" << pop.size() << "..." << std::endl;
-        }
-        EvaluationResult res = simulate_and_evaluate(pop[i], irp, aco_params);
-        pop[i].fitness = res.total_fitness();
+    for (auto& ind : pop) {
+        evaluate_and_fill(ind, irp, aco_params);
     }
 
     Individual bestOverall = *std::min_element(pop.begin(), pop.end(), 
@@ -363,55 +244,52 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
         vector<Individual> newPop;
         newPop.reserve(ga_params.popSize);
 
-        while ((int)newPop.size() < ga_params.popSize) {
+        while (newPop.size() < ga_params.popSize) {
             Individual parent1 = tournamentSelect(pop, ga_params.tournamentK);
             Individual parent2 = tournamentSelect(pop, ga_params.tournamentK);
-            Individual child = crossover(parent1, parent2, irp);
             
-            if (randreal() < ga_params.pMutation) {
-                advance_portion_mutation(child, irp);
-            }
-            
-            // A verificação de factibilidade da frota é feita antes da avaliação completa
-            bool fleet_capacity_ok = true;
-            long total_fleet_capacity = (long)irp.nVehicles * irp.Capacity;
-            for (int t = 0; t < irp.nPeriods; ++t) {
-                long period_load = std::accumulate(child.deliveries[t].begin(), child.deliveries[t].end(), 0L);
-                if (period_load > total_fleet_capacity) {
-                    fleet_capacity_ok = false;
+            Individual child;
+            bool child_is_feasible = false;
+
+            for(int i = 0; i < ga_params.crossover_max_tries; ++i) {
+                if (randreal() < 0.5) {
+                    child = one_point_crossover_customer(parent1, parent2, irp);
+                } else {
+                    child = two_point_crossover_customer(parent1, parent2, irp);
+                }
+
+                if (randreal() < ga_params.pMutation) {
+                    advance_portion_mutation(child, irp);
+                }
+
+                if (check_feasibility(child, irp)) {
+                    child_is_feasible = true;
                     break;
                 }
             }
 
-            if (fleet_capacity_ok) {
-                if (verbose) {
-                    std::cout << "[Gen " << gen + 1 << "] Avaliando Indivíduo " << newPop.size() + 1 << "/" << ga_params.popSize << "..." << std::endl;
-                }
-                EvaluationResult res = simulate_and_evaluate(child, irp, aco_params);
-                child.fitness = res.total_fitness();
+            if (child_is_feasible) {
+                evaluate_and_fill(child, irp, aco_params);
+                newPop.push_back(child);
             } else {
-                child.fitness = 1e18; // Pena de morte
+                newPop.push_back(parent1);
+                if (newPop.size() < ga_params.popSize) {
+                    newPop.push_back(parent2);
+                }
             }
-            
-            newPop.push_back(child);
         }
 
         Individual& bestPrev = *std::min_element(pop.begin(), pop.end(), 
             [](const Individual& a, const Individual& b){ return a.fitness < b.fitness; });
         auto worst_it = std::max_element(newPop.begin(), newPop.end(),
             [](const Individual& a, const Individual& b){ return a.fitness < b.fitness; });
-        if(bestPrev.fitness < worst_it->fitness){
-            *worst_it = bestPrev;
-        }
+        if(bestPrev.fitness < worst_it->fitness) *worst_it = bestPrev;
         pop.swap(newPop);
 
         Individual& genBest = *std::min_element(pop.begin(), pop.end(), 
             [](const Individual& a, const Individual& b){ return a.fitness < b.fitness; });
-        if (genBest.fitness < bestOverall.fitness) {
-            bestOverall = genBest;
-        }
+        if (genBest.fitness < bestOverall.fitness) bestOverall = genBest;
         
-        // Lógica de Detecção de Estagnação e Reinicialização
         if (bestOverall.fitness < last_best_fitness - 1e-9) {
             last_best_fitness = bestOverall.fitness;
             stagnation_counter = 0;
@@ -420,26 +298,33 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
         }
 
         if (ga_params.stagnation_threshold > 0 && stagnation_counter >= ga_params.stagnation_threshold) {
+             if (ga_params.stagnation_threshold > 0 && stagnation_counter >= ga_params.stagnation_threshold) {
             std::cout << "\n*** ESTAGNAÇÃO DETECTADA APÓS " << stagnation_counter << " GERAÇÕES. REINICIALIZANDO POPULAÇÃO... ***\n" << std::endl;
             
             vector<Individual> restarted_pop;
             restarted_pop.reserve(ga_params.popSize);
+            
+            // 1. Mantém o melhor indivíduo de todos
             restarted_pop.push_back(bestOverall);
             
-            int half_remaining = (ga_params.popSize - 1) / 2;
-            for(int i = 0; i < half_remaining; ++i) restarted_pop.push_back(make_stock_up_individual(irp));
-            for(int i = 0; i < (ga_params.popSize - 1 - half_remaining); ++i) restarted_pop.push_back(make_just_in_time_individual(irp));
+            // 2. Preenche o resto com novos indivíduos aleatórios e factíveis
+            while(restarted_pop.size() < ga_params.popSize) {
+                Individual ind = make_simple_random_individual(irp);
+                if (check_feasibility(ind, irp)) {
+                    restarted_pop.push_back(ind);
+                }
+            }
 
+            // 3. Avalia apenas os novos indivíduos (o melhor já está avaliado)
             for(size_t i = 1; i < restarted_pop.size(); ++i) {
-                 EvaluationResult res = simulate_and_evaluate(restarted_pop[i], irp, aco_params);
-                 restarted_pop[i].fitness = res.total_fitness();
+                 evaluate_and_fill(restarted_pop[i], irp, aco_params);
             }
             
-            pop = restarted_pop;
-            stagnation_counter = 0;
+            pop = restarted_pop; // Substitui a população estagnada
+            stagnation_counter = 0; // Reseta o contador
+        }
         }
         
-        // Cálculo de Estatísticas e Log
         double min_fit = (*std::min_element(pop.begin(), pop.end(), [](const auto& a, const auto& b){ return a.fitness < b.fitness; })).fitness;
         double max_fit = (*std::max_element(pop.begin(), pop.end(), [](const auto& a, const auto& b){ return a.fitness < b.fitness; })).fitness;
         double avg_fit = std::accumulate(pop.begin(), pop.end(), 0.0, [](double sum, const auto& ind){ return sum + ind.fitness; }) / pop.size();
@@ -452,6 +337,7 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
     }
     return bestOverall;
 }
+
 void printDeliveriesMatrix(const Individual& ind, const IRP& irp) {
     std::cout << "Matriz de entregas (linhas=periodos, colunas=clientes):\n";
     for (int t = 0; t < irp.nPeriods; ++t) {
@@ -460,6 +346,48 @@ void printDeliveriesMatrix(const Individual& ind, const IRP& irp) {
         }
     }
 }
+
+
+void advance_portion_mutation(Individual& ind, const IRP& irp) {
+    int c = randint(0, irp.nCustomers - 1);
+
+    vector<int> possible_source_periods;
+    for (int t = 1; t < irp.nPeriods; ++t) {
+        if (ind.deliveries[t][c] > 0) {
+            possible_source_periods.push_back(t);
+        }
+    }
+    if (possible_source_periods.empty()) return;
+
+    int t_source = possible_source_periods[randint(0, possible_source_periods.size() - 1)];
+    
+    if (t_source == 0) return;
+    int t_dest = randint(0, t_source - 1);
+
+    int q_available = ind.deliveries[t_source][c];
+    if (q_available <= 0) return;
+    int q_move = randint(1, q_available);
+
+    long current_dest_load = 0;
+    for (int cust = 0; cust < irp.nCustomers; ++cust) {
+        current_dest_load += ind.deliveries[t_dest][cust];
+    }
+    if (current_dest_load + q_move > (long)irp.nVehicles * irp.Capacity) {
+        return;
+    }
+
+    long inv_at_start_of_dest = irp.customers[c].initialInv;
+    for (int p = 0; p < t_dest; ++p) {
+        inv_at_start_of_dest += (long)ind.deliveries[p][c] - irp.customers[c].demand[p];
+    }
+    if (inv_at_start_of_dest + ind.deliveries[t_dest][c] + q_move > irp.customers[c].maxLevelInv) {
+        return;
+    }
+
+    ind.deliveries[t_source][c] -= q_move;
+    ind.deliveries[t_dest][c] += q_move;
+}
+
 
 void exportAndPlotRoutes(const IRP& irp, const Individual& best, const ACO_Params& acoParams,
                          const std::string& dataFilename, const std::string& pyScript) {
