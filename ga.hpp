@@ -15,8 +15,8 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
 Individual make_simple_random_individual(const IRP& irp);
 
 // Novos operadores de crossover
-Individual one_point_crossover_customer(const Individual& a, const Individual& b, const IRP& irp);
-Individual two_point_crossover_customer(const Individual& a, const Individual& b, const IRP& irp);
+std::pair<Individual, Individual> one_point_crossover_customer(const Individual& a, const Individual& b, const IRP& irp);
+std::pair<Individual, Individual> two_point_crossover_customer(const Individual& a, const Individual& b, const IRP& irp);
 void advance_portion_mutation(Individual& ind, const IRP& irp);
 // Nova (e única) função de mutação
 void simple_random_mutation(Individual& ind, const IRP& irp);

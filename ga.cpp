@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <fstream>
 #include <sstream>
+#include <utility>
 
 using std::vector;
 
@@ -159,33 +160,60 @@ Individual make_simple_random_individual(const IRP& irp) {
 }
 
 
-// NOVOS OPERADORES DE CROSSOVER
-Individual one_point_crossover_customer(const Individual& a, const Individual& b, const IRP& irp) {
-    Individual child(irp.nPeriods, irp.nCustomers);
+std::pair<Individual, Individual> one_point_crossover_customer(const Individual& a, const Individual& b, const IRP& irp) {
+    Individual child1(irp.nPeriods, irp.nCustomers);
+    Individual child2(irp.nPeriods, irp.nCustomers);
+    
     int crosspoint = randint(0, irp.nCustomers);
+
     for (int c = 0; c < irp.nCustomers; ++c) {
-        const Individual& source = (c < crosspoint) ? a : b;
-        for (int t = 0; t < irp.nPeriods; ++t) {
-            child.deliveries[t][c] = source.deliveries[t][c];
+        // Se c está antes do ponto de corte
+        if (c < crosspoint) {
+            for (int t = 0; t < irp.nPeriods; ++t) {
+                child1.deliveries[t][c] = a.deliveries[t][c]; // Filho 1 herda do Pai A
+                child2.deliveries[t][c] = b.deliveries[t][c]; // Filho 2 herda do Pai B
+            }
+        } 
+        // Se c está depois do ponto de corte
+        else {
+            for (int t = 0; t < irp.nPeriods; ++t) {
+                child1.deliveries[t][c] = b.deliveries[t][c]; // Filho 1 herda do Pai B
+                child2.deliveries[t][c] = a.deliveries[t][c]; // Filho 2 herda do Pai A
+            }
         }
     }
-    return child;
+    return {child1, child2};
 }
 
-Individual two_point_crossover_customer(const Individual& a, const Individual& b, const IRP& irp) {
-    Individual child(irp.nPeriods, irp.nCustomers);
+// <-- MUDANÇA: Crossover de 2 pontos agora gera dois filhos complementares -->
+std::pair<Individual, Individual> two_point_crossover_customer(const Individual& a, const Individual& b, const IRP& irp) {
+    Individual child1(irp.nPeriods, irp.nCustomers);
+    Individual child2(irp.nPeriods, irp.nCustomers);
+
     int p1 = randint(0, irp.nCustomers);
     int p2 = randint(0, irp.nCustomers);
     if (p1 > p2) std::swap(p1, p2);
 
     for (int c = 0; c < irp.nCustomers; ++c) {
-        const Individual& source = (c >= p1 && c < p2) ? b : a;
-        for (int t = 0; t < irp.nPeriods; ++t) {
-            child.deliveries[t][c] = source.deliveries[t][c];
+        // Se c está dentro do segmento de troca
+        if (c >= p1 && c < p2) {
+            for (int t = 0; t < irp.nPeriods; ++t) {
+                child1.deliveries[t][c] = b.deliveries[t][c]; // Filho 1 herda do Pai B
+                child2.deliveries[t][c] = a.deliveries[t][c]; // Filho 2 herda do Pai A
+            }
+        } 
+        // Se c está fora do segmento
+        else {
+            for (int t = 0; t < irp.nPeriods; ++t) {
+                child1.deliveries[t][c] = a.deliveries[t][c]; // Filho 1 herda do Pai A
+                child2.deliveries[t][c] = b.deliveries[t][c]; // Filho 2 herda do Pai B
+            }
         }
     }
-    return child;
+    return {child1, child2};
 }
+
+
 
 // NOVA E ÚNICA MUTAÇÃO
 void simple_random_mutation(Individual& ind, const IRP& irp) {
@@ -248,37 +276,35 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
             Individual parent1 = tournamentSelect(pop, ga_params.tournamentK);
             Individual parent2 = tournamentSelect(pop, ga_params.tournamentK);
             
-            Individual child;
-            bool child_is_feasible = false;
-
-            for(int i = 0; i < ga_params.crossover_max_tries; ++i) {
-                if (randreal() < 0.5) {
-                    child = one_point_crossover_customer(parent1, parent2, irp);
-                } else {
-                    child = two_point_crossover_customer(parent1, parent2, irp);
-                }
-
-                if (randreal() < ga_params.pMutation) {
-                    advance_portion_mutation(child, irp);
-                }
-
-                if (check_feasibility(child, irp)) {
-                    child_is_feasible = true;
-                    break;
-                }
+            std::pair<Individual, Individual> children;
+            if (randreal() < 0.5) {
+                children = one_point_crossover_customer(parent1, parent2, irp);
+            } else {
+                children = two_point_crossover_customer(parent1, parent2, irp);
             }
 
-            if (child_is_feasible) {
-                evaluate_and_fill(child, irp, aco_params);
-                newPop.push_back(child);
-            } else {
-                newPop.push_back(parent1);
-                if (newPop.size() < ga_params.popSize) {
-                    newPop.push_back(parent2);
+            // Processa o primeiro filho
+            if (randreal() < ga_params.pMutation) {
+                simple_random_mutation(children.first, irp);
+            }
+            if (check_feasibility(children.first, irp)) {
+                evaluate_and_fill(children.first, irp, aco_params);
+                newPop.push_back(children.first);
+            }
+
+            // Processa o segundo filho, se ainda houver espaço
+            if (newPop.size() < ga_params.popSize) {
+                if (randreal() < ga_params.pMutation) {
+                    advance_portion_mutation(children.second, irp);
+                }
+                if (check_feasibility(children.second, irp)) {
+                    evaluate_and_fill(children.second, irp, aco_params);
+                    newPop.push_back(children.second);
                 }
             }
         }
 
+        // Elitismo
         Individual& bestPrev = *std::min_element(pop.begin(), pop.end(), 
             [](const Individual& a, const Individual& b){ return a.fitness < b.fitness; });
         auto worst_it = std::max_element(newPop.begin(), newPop.end(),
@@ -290,13 +316,13 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
             [](const Individual& a, const Individual& b){ return a.fitness < b.fitness; });
         if (genBest.fitness < bestOverall.fitness) bestOverall = genBest;
         
+        // Estagnação e Reinicialização
         if (bestOverall.fitness < last_best_fitness - 1e-9) {
             last_best_fitness = bestOverall.fitness;
             stagnation_counter = 0;
         } else {
             stagnation_counter++;
         }
-
         if (ga_params.stagnation_threshold > 0 && stagnation_counter >= ga_params.stagnation_threshold) {
              if (ga_params.stagnation_threshold > 0 && stagnation_counter >= ga_params.stagnation_threshold) {
             std::cout << "\n*** ESTAGNAÇÃO DETECTADA APÓS " << stagnation_counter << " GERAÇÕES. REINICIALIZANDO POPULAÇÃO... ***\n" << std::endl;
@@ -325,6 +351,7 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
         }
         }
         
+        // Log da Geração
         double min_fit = (*std::min_element(pop.begin(), pop.end(), [](const auto& a, const auto& b){ return a.fitness < b.fitness; })).fitness;
         double max_fit = (*std::max_element(pop.begin(), pop.end(), [](const auto& a, const auto& b){ return a.fitness < b.fitness; })).fitness;
         double avg_fit = std::accumulate(pop.begin(), pop.end(), 0.0, [](double sum, const auto& ind){ return sum + ind.fitness; }) / pop.size();
@@ -337,6 +364,10 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
     }
     return bestOverall;
 }
+
+
+
+
 
 void printDeliveriesMatrix(const Individual& ind, const IRP& irp) {
     std::cout << "Matriz de entregas (linhas=periodos, colunas=clientes):\n";
