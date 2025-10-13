@@ -46,7 +46,6 @@ void evaluate_and_fill(Individual& ind, const IRP& irp, const ACO_Params& aco_pa
         }
     }
     
-    // O fitness é simplesmente o custo operacional
     ind.fitness = ind.routing_cost + ind.customer_holding_cost + ind.depot_holding_cost;
     ind.is_feasible = check_feasibility(ind, irp);
 }

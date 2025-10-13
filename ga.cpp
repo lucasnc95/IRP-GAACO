@@ -15,145 +15,150 @@ using std::vector;
 
 
 
-static vector<int> repair_period_row(const vector<int>& candidate,
-                                     const vector<int>& inv_before,
-                                     vector<long>& net_demand_to_satisfy, // Passado por referência
-                                     int t,
-                                     const IRP& irp) {
-    int nCust = irp.nCustomers;
-    long totalCap = (long)irp.nVehicles * (long)irp.Capacity;
-    vector<int> deliver(nCust, 0);
+// Individual make_simple_random_individual(const IRP& irp) {
+//     Individual ind(irp.nPeriods, irp.nCustomers);
+//     vector<long> current_inv(irp.nCustomers);
+//     for(int i = 0; i < irp.nCustomers; ++i) current_inv[i] = irp.customers[i].initialInv;
 
-    long min_needed_total = 0;
+//     long fleet_capacity = (long)irp.nVehicles * irp.Capacity;
+//     float dynamic_probability = randreal();
 
-    // Passo 1: Calcular e alocar as entregas mínimas obrigatórias
-    for (int c = 0; c < nCust; ++c) {
-        long inv_after_demand = (long)inv_before[c] - irp.customers[c].demand[t];
-        if (inv_after_demand < irp.customers[c].minLevelInv) {
-            long needed = irp.customers[c].minLevelInv - inv_after_demand;
-            long delivery_amount = std::min(needed, net_demand_to_satisfy[c]);
-            deliver[c] = delivery_amount;
-            min_needed_total += delivery_amount;
-        }
-    }
-    
-    long remainingCap = totalCap - min_needed_total;
-    if (remainingCap <= 0) {
-        for(int c = 0; c < nCust; ++c) net_demand_to_satisfy[c] -= deliver[c];
-        return deliver;
-    }
-    
-    // Passo 2: Distribuir a capacidade restante de forma não determinística
-    struct CustInfo { int id; long space; };
-    vector<CustInfo> customers_with_space;
+//     for (int t = 0; t < irp.nPeriods; ++t) {
+//         long period_load = 0;
+//         vector<int> mandatory_custs, optional_custs;
 
-    for (int c = 0; c < nCust; ++c) {
-        long current_inv_after_min_del = (long)inv_before[c] + deliver[c];
-        long space_available = irp.customers[c].maxLevelInv - current_inv_after_min_del;
-        if (space_available > 0 && net_demand_to_satisfy[c] > deliver[c]) {
-            customers_with_space.push_back({c, space_available});
-        }
-    }
-    
-    std::shuffle(customers_with_space.begin(), customers_with_space.end(), rng);
+//         for (int c = 0; c < irp.nCustomers; ++c) {
+//             if (current_inv[c] < irp.customers[c].demand[t]) {
+//                 mandatory_custs.push_back(c);
+//             } else {
+//                 optional_custs.push_back(c);
+//             }
+//         }
 
-    for(const auto& cust_info : customers_with_space) {
-        if (remainingCap <= 0) break;
-        int c = cust_info.id;
-        long space = cust_info.space;
+//         // Atende clientes obrigatórios
+//         for (int c : mandatory_custs) {
+//             long needed = irp.customers[c].demand[t] - current_inv[c];
+//             long space = irp.customers[c].maxLevelInv - (current_inv[c] + needed);
+//             int extra = (space > 0) ? randint(0, std::min((long)20, space)) : 0; // Adiciona um extra aleatório pequeno
+//             int q = std::min((long)irp.Capacity, needed + extra);
+            
+//             if (period_load + q <= fleet_capacity) {
+//                 ind.deliveries[t][c] = q;
+//                 period_load += q;
+//             }
+//         }
         
-        long max_extra_can_deliver = std::min({
-            space, 
-            (long)irp.Capacity - deliver[c], 
-            remainingCap,
-            net_demand_to_satisfy[c] - deliver[c]
-        });
-        
-        if (max_extra_can_deliver > 0) {
-            long random_delivery = randint(0, max_extra_can_deliver);
-            deliver[c] += random_delivery;
-            remainingCap -= random_delivery;
-        }
-    }
-    
-    for(int c = 0; c < nCust; ++c) {
-        net_demand_to_satisfy[c] -= deliver[c];
-    }
+//         // Atende clientes opcionais aleatoriamente
+//         std::shuffle(optional_custs.begin(), optional_custs.end(), rng);
+//         for (int c : optional_custs) {
+//             if (period_load >= fleet_capacity) break;
+//             if (randreal() < dynamic_probability) { // Chance de atender um cliente opcional
+//                 long space = irp.customers[c].maxLevelInv - current_inv[c];
+//                 long max_q = std::min({space, (long)irp.Capacity, fleet_capacity - period_load});
+//                 if (max_q > 0) {
+//                     int q = randint(1, max_q);
+//                     ind.deliveries[t][c] = q;
+//                     period_load += q;
+//                 }
+//             }
+//         }
 
-    return deliver;
-}
+//         // Atualiza o inventário para o próximo período
+//         for (int c = 0; c < irp.nCustomers; ++c) {
+//             current_inv[c] += (long)ind.deliveries[t][c] - irp.customers[c].demand[t];
+//         }
+//     }
+//     return ind;
+// }
 
-void repair_individual(Individual& ind, const IRP& irp) {
-    vector<long> net_demand_to_satisfy(irp.nCustomers, 0);
-    for (int c = 0; c < irp.nCustomers; ++c) {
-        long total_demand = 0;
-        for (int t = 0; t < irp.nPeriods; ++t) {
-            total_demand += irp.customers[c].demand[t];
-        }
-        net_demand_to_satisfy[c] = std::max(0L, total_demand - irp.customers[c].initialInv);
-    }
-    
-    vector<int> current_inv(irp.nCustomers);
-    for(int i = 0; i < irp.nCustomers; ++i) current_inv[i] = irp.customers[i].initialInv;
 
-    for (int t = 0; t < irp.nPeriods; ++t) {
-        ind.deliveries[t] = repair_period_row(ind.deliveries[t], current_inv, net_demand_to_satisfy, t, irp);
-        for (int c = 0; c < irp.nCustomers; ++c) {
-            current_inv[c] += ind.deliveries[t][c] - irp.customers[c].demand[t];
-        }
-    }
-}
+
 
 Individual make_simple_random_individual(const IRP& irp) {
     Individual ind(irp.nPeriods, irp.nCustomers);
     vector<long> current_inv(irp.nCustomers);
     for(int i = 0; i < irp.nCustomers; ++i) current_inv[i] = irp.customers[i].initialInv;
 
+    // Calcula a necessidade líquida total para cada cliente, para a regra de custo
+    vector<long> net_demand_to_satisfy(irp.nCustomers, 0);
+    vector<long> total_delivered_so_far(irp.nCustomers, 0);
+    for (int c = 0; c < irp.nCustomers; ++c) {
+        long total_demand = 0;
+        for (int demand_val : irp.customers[c].demand) total_demand += demand_val;
+        net_demand_to_satisfy[c] = std::max(0L, total_demand - irp.customers[c].initialInv);
+    }
+
     long fleet_capacity = (long)irp.nVehicles * irp.Capacity;
+    double depot_inv_cost = irp.depots[0].invCost;
 
     for (int t = 0; t < irp.nPeriods; ++t) {
         long period_load = 0;
-        vector<int> mandatory_custs, optional_custs;
-
+        vector<int> mandatory_custs;
+        
+        // --- PASSO 1: IDENTIFICAR E ATENDER ENTREGAS MÍNIMAS OBRIGATÓRIAS ---
         for (int c = 0; c < irp.nCustomers; ++c) {
             if (current_inv[c] < irp.customers[c].demand[t]) {
                 mandatory_custs.push_back(c);
-            } else {
-                optional_custs.push_back(c);
-            }
-        }
-
-        // Atende clientes obrigatórios
-        for (int c : mandatory_custs) {
-            long needed = irp.customers[c].demand[t] - current_inv[c];
-            long space = irp.customers[c].maxLevelInv - (current_inv[c] + needed);
-            int extra = (space > 0) ? randint(0, std::min((long)20, space)) : 0; // Adiciona um extra aleatório pequeno
-            int q = std::min((long)irp.Capacity, needed + extra);
-            
-            if (period_load + q <= fleet_capacity) {
-                ind.deliveries[t][c] = q;
-                period_load += q;
+                long needed = irp.customers[c].demand[t] - current_inv[c];
+                ind.deliveries[t][c] = needed;
+                period_load += needed;
             }
         }
         
-        // Atende clientes opcionais aleatoriamente
-        std::shuffle(optional_custs.begin(), optional_custs.end(), rng);
-        for (int c : optional_custs) {
-            if (period_load >= fleet_capacity) break;
-            if (randreal() < 0.3) { // Chance de atender um cliente opcional
-                long space = irp.customers[c].maxLevelInv - current_inv[c];
-                long max_q = std::min({space, (long)irp.Capacity, fleet_capacity - period_load});
-                if (max_q > 0) {
-                    int q = randint(1, max_q);
-                    ind.deliveries[t][c] = q;
-                    period_load += q;
+        // Se a carga obrigatória já excede a capacidade, não há mais nada a fazer neste período
+        if (period_load > fleet_capacity) {
+             // (Opcional: implementar uma lógica de priorização aqui se isso ocorrer)
+        } else {
+            // --- PASSO 2: ATENDER ENTREGAS ANTECIPADAS/OPORTUNISTAS ---
+            long remaining_fleet_capacity = fleet_capacity - period_load;
+            
+            vector<int> customer_order(irp.nCustomers);
+            std::iota(customer_order.begin(), customer_order.end(), 0);
+            std::shuffle(customer_order.begin(), customer_order.end(), rng);
+
+            for (int c : customer_order) {
+                if (remaining_fleet_capacity <= 0) break;
+
+                // Probabilidade de tentar uma entrega oportunista
+                if (randreal() < 0.5) { 
+                    long inv_before_delivery = current_inv[c] + ind.deliveries[t][c];
+                    
+                    // Sorteia um horizonte de antecipação N
+                    int N = randint(0, irp.nPeriods - t - 1);
+                    long look_ahead_demand = 0;
+                    for (int p = t; p <= t + N; ++p) {
+                        look_ahead_demand += irp.customers[c].demand[p];
+                    }
+                    
+                    long amount_needed = look_ahead_demand - current_inv[c];
+                    if (amount_needed <= 0) continue;
+
+                    // Calcula a entrega máxima possível
+                    long max_q = std::min({
+                        (long)irp.Capacity - ind.deliveries[t][c], // O que ainda cabe no veículo para este cliente
+                        remaining_fleet_capacity,                  // O que ainda cabe na frota
+                        irp.customers[c].maxLevelInv - inv_before_delivery // Espaço no armazém
+                    });
+
+                    // Aplica a regra de custo
+                    if (irp.customers[c].invCost >= depot_inv_cost) {
+                        long remaining_net_demand = net_demand_to_satisfy[c] - total_delivered_so_far[c] - ind.deliveries[t][c];
+                        max_q = std::min(max_q, remaining_net_demand);
+                    }
+
+                    if (max_q > 0) {
+                        int q_extra = randint(1, max_q);
+                        ind.deliveries[t][c] += q_extra;
+                        remaining_fleet_capacity -= q_extra;
+                    }
                 }
             }
         }
 
-        // Atualiza o inventário para o próximo período
+        // Atualiza o inventário e o total entregue para o próximo período
         for (int c = 0; c < irp.nCustomers; ++c) {
             current_inv[c] += (long)ind.deliveries[t][c] - irp.customers[c].demand[t];
+            total_delivered_so_far[c] += ind.deliveries[t][c];
         }
     }
     return ind;
@@ -215,22 +220,6 @@ std::pair<Individual, Individual> two_point_crossover_customer(const Individual&
 
 
 
-// NOVA E ÚNICA MUTAÇÃO
-void simple_random_mutation(Individual& ind, const IRP& irp) {
-    int t = randint(0, irp.nPeriods - 1);
-    int c = randint(0, irp.nCustomers - 1);
-    
-    long current_inv = irp.customers[c].initialInv;
-    for(int p = 0; p < t; ++p) {
-        current_inv += (long)ind.deliveries[p][c] - irp.customers[c].demand[p];
-    }
-
-    long space = irp.customers[c].maxLevelInv - current_inv;
-    if (space > 0) {
-        ind.deliveries[t][c] = randint(0, std::min({space, (long)irp.Capacity}));
-    }
-}
-
 
 Individual tournamentSelect(const vector<Individual>& pop, int k) {
     int n = pop.size();
@@ -277,16 +266,23 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
             Individual parent2 = tournamentSelect(pop, ga_params.tournamentK);
             
             std::pair<Individual, Individual> children;
-            if (randreal() < 0.5) {
-                children = one_point_crossover_customer(parent1, parent2, irp);
+
+            if (randreal() < ga_params.pCrossover) {
+                if (randreal() < 0.5) {
+                    children = one_point_crossover_customer(parent1, parent2, irp);
+                } else {
+                    children = two_point_crossover_customer(parent1, parent2, irp);
+                }
             } else {
-                children = two_point_crossover_customer(parent1, parent2, irp);
+                children = {parent1, parent2};
             }
+            
+            // --- MUDANÇA: A chamada de mutação agora é incondicional ---
+            // A probabilidade é verificada dentro da própria função
+            advance_portion_mutation(children.first, irp, ga_params.pMutation);
+            advance_portion_mutation(children.second, irp, ga_params.pMutation);
 
             // Processa o primeiro filho
-            if (randreal() < ga_params.pMutation) {
-                simple_random_mutation(children.first, irp);
-            }
             if (check_feasibility(children.first, irp)) {
                 evaluate_and_fill(children.first, irp, aco_params);
                 newPop.push_back(children.first);
@@ -294,9 +290,6 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
 
             // Processa o segundo filho, se ainda houver espaço
             if (newPop.size() < ga_params.popSize) {
-                if (randreal() < ga_params.pMutation) {
-                    advance_portion_mutation(children.second, irp);
-                }
                 if (check_feasibility(children.second, irp)) {
                     evaluate_and_fill(children.second, irp, aco_params);
                     newPop.push_back(children.second);
@@ -378,45 +371,33 @@ void printDeliveriesMatrix(const Individual& ind, const IRP& irp) {
     }
 }
 
+void advance_portion_mutation(Individual& ind, const IRP& irp, double pMutation) {
+    // Percorre todos os clientes
+    for (int c = 0; c < irp.nCustomers; ++c) {
+        // Percorre os períodos a partir do segundo
+        for (int t_source = 1; t_source < irp.nPeriods; ++t_source) {
+            // Verifica a probabilidade de aplicar a mutação para este cliente/período
+            if (randreal() < pMutation) {
+                int q_available = ind.deliveries[t_source][c];
+                if (q_available <= 0) continue; // Pula se não houver entrega para mover
 
-void advance_portion_mutation(Individual& ind, const IRP& irp) {
-    int c = randint(0, irp.nCustomers - 1);
+                // Sorteia um período de destino anterior e uma quantidade
+                int t_dest = randint(0, t_source - 1);
+                int q_move = randint(1, q_available);
 
-    vector<int> possible_source_periods;
-    for (int t = 1; t < irp.nPeriods; ++t) {
-        if (ind.deliveries[t][c] > 0) {
-            possible_source_periods.push_back(t);
+                // Cria um indivíduo temporário para testar a factibilidade
+                Individual temp_ind = ind;
+                temp_ind.deliveries[t_source][c] -= q_move;
+                temp_ind.deliveries[t_dest][c] += q_move;
+
+                // Se a solução modificada for factível, atualiza o indivíduo original
+                // A função check_feasibility já faz a verificação completa (estoque e frota)
+                if (check_feasibility(temp_ind, irp)) {
+                    ind = temp_ind;
+                }
+            }
         }
     }
-    if (possible_source_periods.empty()) return;
-
-    int t_source = possible_source_periods[randint(0, possible_source_periods.size() - 1)];
-    
-    if (t_source == 0) return;
-    int t_dest = randint(0, t_source - 1);
-
-    int q_available = ind.deliveries[t_source][c];
-    if (q_available <= 0) return;
-    int q_move = randint(1, q_available);
-
-    long current_dest_load = 0;
-    for (int cust = 0; cust < irp.nCustomers; ++cust) {
-        current_dest_load += ind.deliveries[t_dest][cust];
-    }
-    if (current_dest_load + q_move > (long)irp.nVehicles * irp.Capacity) {
-        return;
-    }
-
-    long inv_at_start_of_dest = irp.customers[c].initialInv;
-    for (int p = 0; p < t_dest; ++p) {
-        inv_at_start_of_dest += (long)ind.deliveries[p][c] - irp.customers[c].demand[p];
-    }
-    if (inv_at_start_of_dest + ind.deliveries[t_dest][c] + q_move > irp.customers[c].maxLevelInv) {
-        return;
-    }
-
-    ind.deliveries[t_source][c] -= q_move;
-    ind.deliveries[t_dest][c] += q_move;
 }
 
 

@@ -2,9 +2,9 @@
 
 # Parâmetros do Algoritmo Genético
 popSize = 100
-nGen = 1000
+nGen = 200
 pCrossover = 0.8
-pMutation = 0.08
+pMutation = 0.8
 pLocalSearch = 0.7     
 tournamentK = 3
 stagnation_threshold = 20
