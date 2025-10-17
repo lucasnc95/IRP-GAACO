@@ -13,59 +13,185 @@
 
 using std::vector;
 
+Individual make_simple_random_individual(const IRP& irp) {
+    Individual ind(irp.nPeriods, irp.nCustomers);
+    vector<long> current_inv(irp.nCustomers);
+    for(int i = 0; i < irp.nCustomers; ++i) current_inv[i] = irp.customers[i].initialInv;
+
+    float dynamic_probability = randreal();
+    double depot_inv_cost = irp.depots[0].invCost;
+
+    for (int t = 0; t < irp.nPeriods; ++t) {
+        // --- NOVA LÓGICA: Representação explícita dos veículos e suas cargas ---
+        vector<long> vehicle_loads(irp.nVehicles, 0);
+        // Mapeia qual cliente está em qual veículo (-1 = não alocado)
+        vector<int> customer_to_vehicle_map(irp.nCustomers, -1);
+        vector<bool> is_mandatory(irp.nCustomers, false);
+
+        // --- PASSO 1: ATENDER ENTREGAS MÍNIMAS OBRIGATÓRIAS ---
+        for (int c = 0; c < irp.nCustomers; ++c) {
+            long inv_after_demand = current_inv[c] - irp.customers[c].demand[t];
+            if (inv_after_demand < irp.customers[c].minLevelInv) {
+                is_mandatory[c] = true;
+                long needed = irp.customers[c].minLevelInv - inv_after_demand;
+                long delivery_amount = std::min(needed, irp.customers[c].maxLevelInv - current_inv[c]);
+                if (delivery_amount <= 0) continue;
+
+                // Encontra um veículo que possa fazer esta entrega
+                for (int v = 0; v < irp.nVehicles; ++v) {
+                    if (vehicle_loads[v] + delivery_amount <= irp.Capacity) {
+                        ind.deliveries[t][c] = delivery_amount;
+                        vehicle_loads[v] += delivery_amount;
+                        customer_to_vehicle_map[c] = v; // Associa cliente ao veículo
+                        break; // Veículo encontrado, passa para o próximo cliente
+                    }
+                }
+            }
+        }
+
+        // --- PASSO 2: ENTREGAS OPORTUNISTAS E DE "TOP-UP" ---
+        vector<int> customer_order(irp.nCustomers);
+        std::iota(customer_order.begin(), customer_order.end(), 0);
+        std::shuffle(customer_order.begin(), customer_order.end(), rng);
+
+        for (int c : customer_order) {
+            bool was_mandatory = is_mandatory[c];
+            if (!was_mandatory && randreal() >= dynamic_probability) {
+                continue;
+            }
+
+            long inv_before_topup = current_inv[c];
+            long current_delivery = ind.deliveries[t][c];
+
+            // Tenta encontrar um veículo para este cliente
+            int vehicle_idx = customer_to_vehicle_map[c];
+            if (vehicle_idx == -1) { // Cliente opcional ainda não alocado
+                for (int v = 0; v < irp.nVehicles; ++v) {
+                    if (vehicle_loads[v] < irp.Capacity) {
+                        vehicle_idx = v;
+                        break;
+                    }
+                }
+            }
+            if (vehicle_idx == -1) continue; // Nenhum veículo disponível
+
+            // Calcula o máximo que PODE ser adicionado
+            long max_extra_q = std::min({
+                (irp.customers[c].maxLevelInv + irp.customers[c].demand[t]) - (inv_before_topup + current_delivery),
+                (long)irp.Capacity - vehicle_loads[vehicle_idx]
+            });
+
+            if (max_extra_q > 0) {
+                int q_extra = 0;
+                if (irp.customers[c].invCost < depot_inv_cost) {
+                    q_extra = max_extra_q;
+                } else {
+                    q_extra = was_mandatory ? randint(0, max_extra_q) : randint(1, max_extra_q);
+                }
+
+                if (q_extra > 0) {
+                    ind.deliveries[t][c] += q_extra;
+                    vehicle_loads[vehicle_idx] += q_extra;
+                    customer_to_vehicle_map[c] = vehicle_idx; // Confirma associação
+                }
+            }
+        }
+
+        // Atualiza o inventário para o próximo período com as entregas finais
+        for (int c = 0; c < irp.nCustomers; ++c) {
+            current_inv[c] += (long)ind.deliveries[t][c] - irp.customers[c].demand[t];
+        }
+    }
+    return ind;
+}
+
 
 
 // Individual make_simple_random_individual(const IRP& irp) {
 //     Individual ind(irp.nPeriods, irp.nCustomers);
 //     vector<long> current_inv(irp.nCustomers);
 //     for(int i = 0; i < irp.nCustomers; ++i) current_inv[i] = irp.customers[i].initialInv;
+//     float probability = randreal();
+//     // Calcula a necessidade líquida total para cada cliente, para a regra de custo
+//     vector<long> net_demand_to_satisfy(irp.nCustomers, 0);
+//     vector<long> total_delivered_so_far(irp.nCustomers, 0);
+//     for (int c = 0; c < irp.nCustomers; ++c) {
+//         long total_demand = 0;
+//         for (int demand_val : irp.customers[c].demand) total_demand += demand_val;
+//         net_demand_to_satisfy[c] = std::max(0L, total_demand - irp.customers[c].initialInv);
+//     }
 
 //     long fleet_capacity = (long)irp.nVehicles * irp.Capacity;
-//     float dynamic_probability = randreal();
+//     double depot_inv_cost = irp.depots[0].invCost;
 
 //     for (int t = 0; t < irp.nPeriods; ++t) {
 //         long period_load = 0;
-//         vector<int> mandatory_custs, optional_custs;
-
+//         vector<int> mandatory_custs;
+        
+//         // --- PASSO 1: IDENTIFICAR E ATENDER ENTREGAS MÍNIMAS OBRIGATÓRIAS ---
 //         for (int c = 0; c < irp.nCustomers; ++c) {
 //             if (current_inv[c] < irp.customers[c].demand[t]) {
 //                 mandatory_custs.push_back(c);
-//             } else {
-//                 optional_custs.push_back(c);
-//             }
-//         }
-
-//         // Atende clientes obrigatórios
-//         for (int c : mandatory_custs) {
-//             long needed = irp.customers[c].demand[t] - current_inv[c];
-//             long space = irp.customers[c].maxLevelInv - (current_inv[c] + needed);
-//             int extra = (space > 0) ? randint(0, std::min((long)20, space)) : 0; // Adiciona um extra aleatório pequeno
-//             int q = std::min((long)irp.Capacity, needed + extra);
-            
-//             if (period_load + q <= fleet_capacity) {
-//                 ind.deliveries[t][c] = q;
-//                 period_load += q;
+//                 long needed = irp.customers[c].demand[t] - current_inv[c];
+//                 ind.deliveries[t][c] = needed;
+//                 period_load += needed;
 //             }
 //         }
         
-//         // Atende clientes opcionais aleatoriamente
-//         std::shuffle(optional_custs.begin(), optional_custs.end(), rng);
-//         for (int c : optional_custs) {
-//             if (period_load >= fleet_capacity) break;
-//             if (randreal() < dynamic_probability) { // Chance de atender um cliente opcional
-//                 long space = irp.customers[c].maxLevelInv - current_inv[c];
-//                 long max_q = std::min({space, (long)irp.Capacity, fleet_capacity - period_load});
-//                 if (max_q > 0) {
-//                     int q = randint(1, max_q);
-//                     ind.deliveries[t][c] = q;
-//                     period_load += q;
+//         // Se a carga obrigatória já excede a capacidade, não há mais nada a fazer neste período
+//         if (period_load > fleet_capacity) {
+//              // (Opcional: implementar uma lógica de priorização aqui se isso ocorrer)
+//         } else {
+//             // --- PASSO 2: ATENDER ENTREGAS ANTECIPADAS/OPORTUNISTAS ---
+//             long remaining_fleet_capacity = fleet_capacity - period_load;
+            
+//             vector<int> customer_order(irp.nCustomers);
+//             std::iota(customer_order.begin(), customer_order.end(), 0);
+//             std::shuffle(customer_order.begin(), customer_order.end(), rng);
+
+//             for (int c : customer_order) {
+//                 if (remaining_fleet_capacity <= 0) break;
+
+//                 // Probabilidade de tentar uma entrega oportunista
+//                 if (randreal() < probability) { 
+//                     long inv_before_delivery = current_inv[c] + ind.deliveries[t][c];
+                    
+//                     // Sorteia um horizonte de antecipação N
+//                     int N = randint(0, irp.nPeriods - t - 1);
+//                     long look_ahead_demand = 0;
+//                     for (int p = t; p <= t + N; ++p) {
+//                         look_ahead_demand += irp.customers[c].demand[p];
+//                     }
+                    
+//                     long amount_needed = look_ahead_demand - current_inv[c];
+//                     if (amount_needed <= 0) continue;
+
+//                     // Calcula a entrega máxima possível
+//                     long max_q = std::min({
+//                         (long)irp.Capacity - ind.deliveries[t][c], // O que ainda cabe no veículo para este cliente
+//                         remaining_fleet_capacity,                  // O que ainda cabe na frota
+//                         irp.customers[c].maxLevelInv - inv_before_delivery // Espaço no armazém
+//                     });
+
+//                     // Aplica a regra de custo
+//                     if (irp.customers[c].invCost >= depot_inv_cost) {
+//                         long remaining_net_demand = net_demand_to_satisfy[c] - total_delivered_so_far[c] - ind.deliveries[t][c];
+//                         max_q = std::min(max_q, remaining_net_demand);
+//                     }
+
+//                     if (max_q > 0) {
+//                         int q_extra = randint(1, max_q);
+//                         ind.deliveries[t][c] += q_extra;
+//                         remaining_fleet_capacity -= q_extra;
+//                     }
 //                 }
 //             }
 //         }
 
-//         // Atualiza o inventário para o próximo período
+//         // Atualiza o inventário e o total entregue para o próximo período
 //         for (int c = 0; c < irp.nCustomers; ++c) {
 //             current_inv[c] += (long)ind.deliveries[t][c] - irp.customers[c].demand[t];
+//             total_delivered_so_far[c] += ind.deliveries[t][c];
 //         }
 //     }
 //     return ind;
@@ -73,96 +199,6 @@ using std::vector;
 
 
 
-
-Individual make_simple_random_individual(const IRP& irp) {
-    Individual ind(irp.nPeriods, irp.nCustomers);
-    vector<long> current_inv(irp.nCustomers);
-    for(int i = 0; i < irp.nCustomers; ++i) current_inv[i] = irp.customers[i].initialInv;
-
-    // Calcula a necessidade líquida total para cada cliente, para a regra de custo
-    vector<long> net_demand_to_satisfy(irp.nCustomers, 0);
-    vector<long> total_delivered_so_far(irp.nCustomers, 0);
-    for (int c = 0; c < irp.nCustomers; ++c) {
-        long total_demand = 0;
-        for (int demand_val : irp.customers[c].demand) total_demand += demand_val;
-        net_demand_to_satisfy[c] = std::max(0L, total_demand - irp.customers[c].initialInv);
-    }
-
-    long fleet_capacity = (long)irp.nVehicles * irp.Capacity;
-    double depot_inv_cost = irp.depots[0].invCost;
-
-    for (int t = 0; t < irp.nPeriods; ++t) {
-        long period_load = 0;
-        vector<int> mandatory_custs;
-        
-        // --- PASSO 1: IDENTIFICAR E ATENDER ENTREGAS MÍNIMAS OBRIGATÓRIAS ---
-        for (int c = 0; c < irp.nCustomers; ++c) {
-            if (current_inv[c] < irp.customers[c].demand[t]) {
-                mandatory_custs.push_back(c);
-                long needed = irp.customers[c].demand[t] - current_inv[c];
-                ind.deliveries[t][c] = needed;
-                period_load += needed;
-            }
-        }
-        
-        // Se a carga obrigatória já excede a capacidade, não há mais nada a fazer neste período
-        if (period_load > fleet_capacity) {
-             // (Opcional: implementar uma lógica de priorização aqui se isso ocorrer)
-        } else {
-            // --- PASSO 2: ATENDER ENTREGAS ANTECIPADAS/OPORTUNISTAS ---
-            long remaining_fleet_capacity = fleet_capacity - period_load;
-            
-            vector<int> customer_order(irp.nCustomers);
-            std::iota(customer_order.begin(), customer_order.end(), 0);
-            std::shuffle(customer_order.begin(), customer_order.end(), rng);
-
-            for (int c : customer_order) {
-                if (remaining_fleet_capacity <= 0) break;
-
-                // Probabilidade de tentar uma entrega oportunista
-                if (randreal() < 0.5) { 
-                    long inv_before_delivery = current_inv[c] + ind.deliveries[t][c];
-                    
-                    // Sorteia um horizonte de antecipação N
-                    int N = randint(0, irp.nPeriods - t - 1);
-                    long look_ahead_demand = 0;
-                    for (int p = t; p <= t + N; ++p) {
-                        look_ahead_demand += irp.customers[c].demand[p];
-                    }
-                    
-                    long amount_needed = look_ahead_demand - current_inv[c];
-                    if (amount_needed <= 0) continue;
-
-                    // Calcula a entrega máxima possível
-                    long max_q = std::min({
-                        (long)irp.Capacity - ind.deliveries[t][c], // O que ainda cabe no veículo para este cliente
-                        remaining_fleet_capacity,                  // O que ainda cabe na frota
-                        irp.customers[c].maxLevelInv - inv_before_delivery // Espaço no armazém
-                    });
-
-                    // Aplica a regra de custo
-                    if (irp.customers[c].invCost >= depot_inv_cost) {
-                        long remaining_net_demand = net_demand_to_satisfy[c] - total_delivered_so_far[c] - ind.deliveries[t][c];
-                        max_q = std::min(max_q, remaining_net_demand);
-                    }
-
-                    if (max_q > 0) {
-                        int q_extra = randint(1, max_q);
-                        ind.deliveries[t][c] += q_extra;
-                        remaining_fleet_capacity -= q_extra;
-                    }
-                }
-            }
-        }
-
-        // Atualiza o inventário e o total entregue para o próximo período
-        for (int c = 0; c < irp.nCustomers; ++c) {
-            current_inv[c] += (long)ind.deliveries[t][c] - irp.customers[c].demand[t];
-            total_delivered_so_far[c] += ind.deliveries[t][c];
-        }
-    }
-    return ind;
-}
 
 
 std::pair<Individual, Individual> one_point_crossover_customer(const Individual& a, const Individual& b, const IRP& irp) {
