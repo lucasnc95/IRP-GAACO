@@ -10,6 +10,8 @@
 
 Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, const ACO_Params& aco_params, bool verbose);
 Individual make_simple_random_individual(const IRP& irp);
+Individual make_simple_random_individual_2(const IRP& irp);
+
 
 std::pair<Individual, Individual> one_point_crossover_customer(const Individual& a, const Individual& b, const IRP& irp);
 std::pair<Individual, Individual> two_point_crossover_customer(const Individual& a, const Individual& b, const IRP& irp);

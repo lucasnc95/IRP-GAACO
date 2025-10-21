@@ -16,10 +16,23 @@ struct Individual {
     double fitness;
     bool is_feasible;
 
+    // --- NOVAS MATRIZES AUXILIARES ---
+    // Matriz de entrega mínima para garantir a demanda (preenchida pelo reparo/avaliação)
+    std::vector<std::vector<int>> min_delivery_matrix;
+    
+    // Matriz de inventário final (após entrega e demanda)
+    std::vector<std::vector<long>> final_inventory_matrix;
+
+
     // Construtor para inicializar com o tamanho correto e valores padrão
     Individual(int nPeriods = 0, int nCustomers = 0) {
         deliveries.assign(nPeriods, std::vector<int>(nCustomers, 0));
         routes_per_period.resize(nPeriods);
+
+        // <-- MUDANÇA: Inicializa as novas matrizes com o tamanho correto
+        min_delivery_matrix.assign(nPeriods, std::vector<int>(nCustomers, 0));
+        final_inventory_matrix.assign(nPeriods, std::vector<long>(nCustomers, 0));
+
         // Inicializa custos com -1 para indicar que não foi avaliado
         routing_cost = -1.0;
         customer_holding_cost = -1.0;

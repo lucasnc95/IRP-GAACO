@@ -68,6 +68,7 @@ int main(int argc, char** argv) {
               << " Alpha: " << aco_params.alpha
               << ", Beta: " << aco_params.beta << ", Rho: " << aco_params.rho 
               << ", Q: " << aco_params.Q << "\n";
+    irp.printData();          
 
     Individual bestOverall = run_genetic_algorithm(irp, ga_params, aco_params, verbose_mode);
 
