@@ -229,22 +229,102 @@ void evaluate_and_fill(Individual& ind, const IRP& irp, const ACO_Params& aco_pa
 // }
 
 
+// bool check_feasibility(const Individual& ind, const IRP& irp) {
+    
+//     // --- Checagem 1: Capacidade de Veículos e Frota ---
+//     long total_fleet_capacity = (long)irp.nVehicles * irp.Capacity;
+//     for (int t = 0; t < irp.nPeriods; ++t) {
+//         long period_load = 0;
+//         for (int c = 0; c < irp.nCustomers; ++c) {
+//             // Verifica se uma única entrega excede a capacidade de um veículo
+//             if (ind.deliveries[t][c] > irp.Capacity) {
+//                 return false; 
+//             }
+//             period_load += ind.deliveries[t][c];
+//         }
+//         // Verifica se a soma das entregas no período excede a capacidade da frota
+//         if (period_load > total_fleet_capacity) {
+//             return false;
+//         }
+//     }
+
+//     // --- Checagem 2: Simulação de Inventário (Depósito e Clientes) ---
+//     vector<long> customer_inv(irp.nCustomers);
+//     for (int i = 0; i < irp.nCustomers; ++i) customer_inv[i] = irp.customers[i].initialInv;
+    
+//     long depot_inv = irp.depots[0].initialInv;
+
+//     for (int t = 0; t < irp.nPeriods; ++t) {
+//         depot_inv += irp.depots[0].production[t];
+//         long period_delivery_sum = std::accumulate(ind.deliveries[t].begin(), ind.deliveries[t].end(), 0L);
+
+//         // Verifica se há estoque suficiente no depósito para as entregas do período
+//         if (period_delivery_sum > depot_inv) {
+//             return false;
+//         }
+//         depot_inv -= period_delivery_sum;
+
+//         for (int c = 0; c < irp.nCustomers; ++c) {
+//             // O estoque no início do período 't' é o que sobrou do período 't-1'
+//             // 1. A entrega chega
+//             customer_inv[c] += (long)ind.deliveries[t][c];
+            
+//             // 2. A demanda do período é consumida
+//             customer_inv[c] -= (long)irp.customers[c].demand[t];
+            
+//             // <-- MUDANÇA: As checagens de inventário são feitas AGORA, sobre o estoque final do período -->
+//             // Verifica se houve ruptura de estoque (abaixo do mínimo)
+//             if (customer_inv[c] < irp.customers[c].minLevelInv) {
+//                  return false;
+//             }
+            
+//             // Verifica se o estoque máximo foi excedido
+//             if(customer_inv[c] > irp.customers[c].maxLevelInv) {
+//                 return false;
+//             }
+//         }
+//     }
+
+//     // Se passou por todas as checagens, a solução é factível
+//     return true;
+// }
+
 bool check_feasibility(const Individual& ind, const IRP& irp) {
     
     // --- Checagem 1: Capacidade de Veículos e Frota ---
     long total_fleet_capacity = (long)irp.nVehicles * irp.Capacity;
     for (int t = 0; t < irp.nPeriods; ++t) {
         long period_load = 0;
+        // Mapeia alocação em veículos discretos
+        vector<long> vehicle_loads(irp.nVehicles, 0);
+        
         for (int c = 0; c < irp.nCustomers; ++c) {
-            // Verifica se uma única entrega excede a capacidade de um veículo
-            if (ind.deliveries[t][c] > irp.Capacity) {
-                return false; 
+            int delivery_q = ind.deliveries[t][c];
+            if (delivery_q == 0) continue;
+
+            if (delivery_q > irp.Capacity) {
+                return false; // Entrega individual excede capacidade de um veículo
             }
-            period_load += ind.deliveries[t][c];
+            
+            // Tenta alocar a entrega a um veículo
+            bool allocated = false;
+            for(int v=0; v < irp.nVehicles; ++v) {
+                if(vehicle_loads[v] + delivery_q <= irp.Capacity) {
+                    vehicle_loads[v] += delivery_q;
+                    allocated = true;
+                    break;
+                }
+            }
+            
+            if(!allocated) {
+                return false; // Não há veículos suficientes para alocar as entregas individuais
+            }
+            
+            period_load += delivery_q;
         }
-        // Verifica se a soma das entregas no período excede a capacidade da frota
+        
         if (period_load > total_fleet_capacity) {
-            return false;
+            return false; // Carga total do período excede capacidade da frota
         }
     }
 
@@ -258,33 +338,27 @@ bool check_feasibility(const Individual& ind, const IRP& irp) {
         depot_inv += irp.depots[0].production[t];
         long period_delivery_sum = std::accumulate(ind.deliveries[t].begin(), ind.deliveries[t].end(), 0L);
 
-        // Verifica se há estoque suficiente no depósito para as entregas do período
         if (period_delivery_sum > depot_inv) {
             return false;
         }
         depot_inv -= period_delivery_sum;
 
         for (int c = 0; c < irp.nCustomers; ++c) {
-            // O estoque no início do período 't' é o que sobrou do período 't-1'
-            // 1. A entrega chega
             customer_inv[c] += (long)ind.deliveries[t][c];
             
-            // 2. A demanda do período é consumida
-            customer_inv[c] -= (long)irp.customers[c].demand[t];
-            
-            // <-- MUDANÇA: As checagens de inventário são feitas AGORA, sobre o estoque final do período -->
-            // Verifica se houve ruptura de estoque (abaixo do mínimo)
-            if (customer_inv[c] < irp.customers[c].minLevelInv) {
-                 return false;
-            }
-            
-            // Verifica se o estoque máximo foi excedido
+            // VERIFICAÇÃO DE PICO DE ESTOQUE (antes da demanda)
             if(customer_inv[c] > irp.customers[c].maxLevelInv) {
                 return false;
+            }
+            
+            customer_inv[c] -= (long)irp.customers[c].demand[t];
+            
+            // VERIFICAÇÃO DE ESTOQUE MÍNIMO (após a demanda)
+            if (customer_inv[c] < irp.customers[c].minLevelInv) {
+                 return false;
             }
         }
     }
 
-    // Se passou por todas as checagens, a solução é factível
     return true;
 }
