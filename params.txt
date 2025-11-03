@@ -1,11 +1,11 @@
 # Arquivo de configuração para o solver GA-ACO IRP
 
 # Parâmetros do Algoritmo Genético
-popSize = 5
-nGen = 500
+popSize = 1
+nGen = 5
 pCrossover = 0.8
 pMutation = 0.08
-pLocalSearch = 0.7     
+pLocalSearch = 1.0     
 tournamentK = 3
 stagnation_threshold = 75
 crossover_max_tries = 2 

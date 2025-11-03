@@ -1,6 +1,7 @@
 #include "ga.hpp"
 #include "utils.hpp"
 #include "evaluation.hpp"
+#include "ds_operator.hpp"
 #include <iostream>
 #include <vector>
 #include <numeric>
@@ -14,6 +15,76 @@
 
 using std::vector;
 
+void sua_futura_busca_local(Individual& sol, const IRP& irp, const ACO_Params& aco_params) {
+    
+    // 1. CHAMA A FUNÇÃO DE ANÁLISE
+    //    Ela clona, sorteia um cliente, remove, reroteiriza, e calcula tudo.
+    ReinsertionData data = calculate_reinsertion_data(sol, irp, aco_params);
+    
+    int c = data.customer_id; // O cliente (0-based) que foi removido
+
+    std::cout << "\n======================================================\n";
+    std::cout << "=== INÍCIO DA ANÁLISE (Busca Local - Cliente " << (c + 1) << ") ===\n";
+    std::cout << "======================================================\n";
+
+    // 2. IMPRIME O ESTADO "ANTES"
+    std::cout << "\n--- ESTADO ANTES DA REMOÇÃO (Solução Original) ---\n";
+    std::cout << std::fixed << std::setprecision(2);
+    std::cout << "Custo Total Original: " << data.cost_before_removal << "\n";
+    std::cout << "Rotas Originais (Cliente " << (c + 1) << " incluído):\n";
+    for (int t = 0; t < irp.nPeriods; ++t) {
+        print_routes_for_period(data.routes_before_removal[t], irp, t);
+    }
+
+    // 3. IMPRIME O ESTADO "DEPOIS"
+    std::cout << "\n--- ESTADO DEPOIS DA REMOÇÃO (Cliente " << (c + 1) << " removido) ---\n";
+    std::cout << "Custo da Solução Parcial: " << data.cost_after_removal << "\n";
+    std::cout << "Rotas Reroteirizadas (Sem Cliente " << (c + 1) << "):\n";
+    for (int t = 0; t < irp.nPeriods; ++t) {
+        print_routes_for_period(data.routes_after_removal[t], irp, t);
+    }
+    
+    double custo_remocao = data.cost_before_removal - data.cost_after_removal;
+    std::cout << ">>> Custo de Remoção do Cliente " << (c + 1) << ": " << custo_remocao << " <<<\n";
+
+    // 4. IMPRIME OS DADOS DE REINSERÇÃO CALCULADOS
+    std::cout << "\n--- DADOS DE REINSERÇÃO (Para Programação Dinâmica) ---\n";
+    for (int t = 0; t < irp.nPeriods; ++t) {
+        std::cout << "  Periodo " << t << ":\n";
+        
+        // Imprime o máximo que pode ser entregue (Restrição de Inventário)
+        std::cout << "    Max. Qtd. Inventário (U_i - I_{t-1}): " << data.max_q_inventory[t] << "\n";
+        
+        // Imprime a função de custo (Restrição de Roteamento)
+        std::cout << "    Função de Custo de Rota (F_t(q)) [Formato Gurobi]:\n";
+        
+        const auto& ft = data.insertion_cost_functions[t];
+        if (ft.q_breakpoints.empty()) {
+            std::cout << "      (Nenhuma opção de inserção encontrada)\n";
+            continue;
+        }
+
+        std::cout << "      q_pts = {";
+        for(size_t i=0; i<ft.q_breakpoints.size(); ++i) {
+            std::cout << ft.q_breakpoints[i] << (i == ft.q_breakpoints.size() - 1 ? "" : ", ");
+        }
+        std::cout << "}\n";
+        
+        std::cout << "      c_pts = {"; // c_pts são os CUSTOS (gamma)
+        for(size_t i=0; i<ft.cost_values.size(); ++i) {
+            std::cout << ft.cost_values[i] << (i == ft.cost_values.size() - 1 ? "" : ", ");
+        }
+        std::cout << "}\n";
+    }
+
+    std::cout << "======================================================\n";
+    std::cout << "=== FIM DA ANÁLISE (Cliente " << (c + 1) << ") ===\n";
+    std::cout << "======================================================\n\n";
+
+    // 5. AQUI VIRIA A LÓGICA DA SUA BUSCA LOCAL
+    //    (ex: uma Programação Dinâmica que usa esses dados para
+    //     encontrar o novo plano ótimo de entregas para o cliente 'c')
+}
 
 bool check_aco_consistency(const vector<int>& deliveries, const vector<Route>& routes) {
     std::set<int> customers_requiring_delivery;
@@ -353,18 +424,18 @@ Individual tournamentSelect(const vector<Individual>& pop, int k) {
 Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, const ACO_Params& aco_params, bool verbose) {
     vector<Individual> pop;
     pop.reserve(ga_params.popSize);
-    std::cout << "criando população inicial..." << std::endl;
     
-    while(pop.size() < ga_params.popSize) {
-        Individual ind = make_new_heuristic_individual(irp, aco_params);
-        if (check_feasibility(ind, irp)) {
-            pop.push_back(ind);
-        }
-
+    std::cout << "Inicializando população..." << std::endl;
+    for (int i = 0; i < ga_params.popSize; ++i) {
+        // A 'make_new_heuristic_individual' já preenche 'deliveries' e 'routes_per_period'
+        pop.push_back(make_new_heuristic_individual(irp, aco_params));
     }
-
+    Individual indiv = make_new_heuristic_individual(irp, aco_params);
+    sua_futura_busca_local(indiv, irp, aco_params);
     std::cout << "Avaliando população inicial..." << std::endl;
     for (auto& ind : pop) {
+        // A 'evaluate_and_fill' agora apenas valida e calcula os custos
+        // das rotas e entregas JÁ EXISTENTES no indivíduo.
         evaluate_and_fill(ind, irp, aco_params);
     }
 
@@ -390,7 +461,9 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
 
         // 2. (70%) Geração de Filhos (Crossover e Mutação)
         int children_target_count = num_elites + (int)(ga_params.popSize * 0.70);
-        while (newPop.size() < children_target_count) {
+        int crossover_tries = 0; 
+
+        while (newPop.size() < children_target_count && crossover_tries < ga_params.crossover_max_tries) {
             Individual parent1 = tournamentSelect(pop, ga_params.tournamentK);
             Individual parent2 = tournamentSelect(pop, ga_params.tournamentK);
             
@@ -406,32 +479,42 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
                 children = {parent1, parent2};
             }
             
+            // --- Processa o Filho 1 ---
+            crossover_tries++;
             advance_portion_mutation(children.first, irp, ga_params.pMutation);
             
+            // <-- MUDANÇA: Chama a nova função para gerar rotas -->
+            generate_routes_for_individual(children.first, irp, aco_params);
+
+            // Agora a checagem de factibilidade pode comparar 'deliveries' e 'routes'
             if (check_feasibility(children.first, irp)) {
-                evaluate_and_fill(children.first, irp, aco_params);
+                evaluate_and_fill(children.first, irp, aco_params); // Apenas calcula custos
                 newPop.push_back(children.first);
             }
 
-            if (newPop.size() < children_target_count) {
-                advance_portion_mutation(children.second, irp, ga_params.pMutation);
-                if (check_feasibility(children.second, irp)) {
-                    evaluate_and_fill(children.second, irp, aco_params);
-                    newPop.push_back(children.second);
-                }
+            if (newPop.size() >= children_target_count) break;
+
+            // --- Processa o Filho 2 ---
+            crossover_tries++;
+            advance_portion_mutation(children.second, irp, ga_params.pMutation);
+
+            // <-- MUDANÇA: Chama a nova função para gerar rotas -->
+            generate_routes_for_individual(children.second, irp, aco_params);
+            
+            if (check_feasibility(children.second, irp)) {
+                evaluate_and_fill(children.second, irp, aco_params); // Apenas calcula custos
+                newPop.push_back(children.second);
             }
         }
 
         // 3. (20%) Geração de Imigrantes (Novos Aleatórios)
         while (newPop.size() < ga_params.popSize) {
             Individual ind = make_new_heuristic_individual(irp, aco_params);
-             if (check_feasibility(ind, irp)) {
-                evaluate_and_fill(ind, irp, aco_params);
-                newPop.push_back(ind);
-            }
- 
+            // Avalia o novo imigrante
+            evaluate_and_fill(ind, irp, aco_params);
+            newPop.push_back(ind);
         }
-
+        
         pop.swap(newPop);
 
         Individual& genBest = *std::min_element(pop.begin(), pop.end(), 
@@ -456,7 +539,6 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
 
 
 
-
 void printDeliveriesMatrix(const Individual& ind, const IRP& irp) {
     std::cout << "Matriz de entregas (linhas=periodos, colunas=clientes):\n";
     for (int t = 0; t < irp.nPeriods; ++t) {
@@ -467,7 +549,28 @@ void printDeliveriesMatrix(const Individual& ind, const IRP& irp) {
 }
 
 
+void generate_routes_for_individual(Individual& ind, const IRP& irp, const ACO_Params& aco_params) {
+    // Limpa/Redimensiona o vetor de rotas para garantir que está limpo
+    ind.routes_per_period.assign(irp.nPeriods, std::vector<Route>());
 
+    // Itera sobre cada período do plano de entregas
+    for (int t = 0; t < irp.nPeriods; ++t) {
+        long period_delivery_sum = std::accumulate(ind.deliveries[t].begin(), ind.deliveries[t].end(), 0L);
+        
+        if (period_delivery_sum > 0) {
+            // Chama o ACO para gerar as rotas para o plano de entrega do dia 't'
+            ACO_Result ares = runACO_for_period(irp, ind.deliveries[t], aco_params, false);
+            
+            // Armazena o resultado no indivíduo.
+            // A função 'check_feasibility' irá posteriormente validar
+            // se 'ares.bestRoutes' é de fato uma solução válida (sem custo LARGE
+            // e com todos os clientes atendidos).
+            ind.routes_per_period[t] = ares.bestRoutes;
+        }
+        // Se period_delivery_sum == 0, o vetor de rotas ind.routes_per_period[t]
+        // permanece vazio, o que é o correto.
+    }
+}
 
 
 void advance_portion_mutation(Individual& ind, const IRP& irp, double pMutation) {

@@ -16,7 +16,7 @@ std::pair<Individual, Individual> one_point_crossover_customer(const Individual&
 std::pair<Individual, Individual> two_point_crossover_customer(const Individual& a, const Individual& b, const IRP& irp);
 void advance_portion_mutation(Individual& ind, const IRP& irp, double pMutation);
 Individual tournamentSelect(const std::vector<Individual>& pop, int k);
-
+void generate_routes_for_individual(Individual& ind, const IRP& irp, const ACO_Params& aco_params);
 
 void printDeliveriesMatrix(const Individual& ind, const IRP& irp);
 void exportAndPlotRoutes(
