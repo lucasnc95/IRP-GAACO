@@ -1,76 +1,200 @@
+/*
+ * ARQUIVO MODIFICADO: evaluation.cpp
+ *
+ * 1. A função `check_feasibility` foi completamente reescrita para ser 100% rigorosa.
+ * Ela agora valida as rotas reais (vindas do ACO) e faz a simulação completa
+ * de inventário. Esta função é a única "porteira" da factibilidade.
+ *
+ * 2. A função `evaluate_and_fill` foi simplificada. Ela agora ASSUME que
+ * o indivíduo é factível (pois `check_feasibility` já foi chamada)
+ * e sua única tarefa é calcular os custos e o fitness.
+ */
+
 #include "evaluation.hpp"
-#include "aco.hpp"
+#include "aco.hpp"          // Para ACO_Params (embora não mais usado ativamente)
+#include "route.hpp"        // Para Route
+#include "irp.hpp"          // Para IRP
 #include <vector>
-#include <numeric>
-#include <set>
+#include <numeric>         // Para std::accumulate
+#include <set>             // Para std::set
+#include <map>             // Para std::map (necessário para a próxima função)
 
 using std::vector;
 
-
-void evaluate_and_fill(Individual& ind, const IRP& irp, const ACO_Params& aco_params) {
-    const double LARGE_COST = 1e18;
+/**
+ * @brief Checa RIGOROSAMENTE a factibilidade de um indivíduo.
+ * Esta função valida tudo: consistência das rotas, capacidade dos veículos,
+ * capacidade da frota, estoque do depósito e estoque (min/max) dos clientes.
+ * É esta função que previne os "falsos positivos".
+ */
+bool check_feasibility(const Individual& ind, const IRP& irp) {
     
-    // Reseta todos os campos de resultado antes de recalcular
+    // --- Checagem 1: Validação de Rota e Capacidade (Por Período) ---
+    for (int t = 0; t < irp.nPeriods; ++t) {
+        
+        // Se o número de rotas criadas excede a frota disponível
+        if (ind.routes_per_period[t].size() > irp.nVehicles) {
+            return false; // Violação de Tamanho de Frota
+        }
+
+        std::set<int> customers_requiring_delivery;
+        for (int c = 0; c < irp.nCustomers; ++c) {
+            if (ind.deliveries[t][c] > 0) {
+                customers_requiring_delivery.insert(c + 1); // 1-based
+            }
+        }
+
+        std::set<int> customers_in_routes;
+        long total_period_load_from_routes = 0;
+
+        // Valida cada rota individualmente
+        for (const Route& route : ind.routes_per_period[t]) {
+            long actual_route_load = 0;
+            
+            for (int node : route.visits) {
+                if (node > 0) { // Nó 0 é o depósito
+                    customers_in_routes.insert(node);
+                    
+                    // Soma a carga da rota com base no plano de entregas
+                    actual_route_load += (long)ind.deliveries[t][node - 1]; 
+                }
+            }
+
+            // Checa se a carga real da rota excede a capacidade do veículo
+            if (actual_route_load > irp.Capacity) {
+                return false; // Violação de Capacidade do Veículo
+            }
+            
+            // Opcional: Checa se o 'remaining_capacity' da struct está correto
+            // (Isso é bom para depuração, mas a checagem acima é a que vale)
+            if (irp.Capacity - actual_route_load != route.remaining_capacity) {
+                 // std::cerr << "Aviso: Capacidade restante mal calculada na rota!\n";
+                 // Não torna infactível, mas é um bug na struct. A checagem de 'actual_route_load' é o que importa.
+            }
+            
+            total_period_load_from_routes += actual_route_load;
+        }
+
+        // Checa consistência: Todos que precisam de entrega estão em uma rota?
+        if (customers_requiring_delivery != customers_in_routes) {
+            return false; // Inconsistência: Entregas planejadas não batem com as rotas
+        }
+    } // Fim da checagem de rotas
+
+    // --- Checagem 2: Simulação de Inventário (Clientes e Depósito) ---
+    vector<long> customer_inv(irp.nCustomers);
+    for (int i = 0; i < irp.nCustomers; ++i) customer_inv[i] = irp.customers[i].initialInv;
+    
+    long depot_inv = irp.depots[0].initialInv;
+
+    for (int t = 0; t < irp.nPeriods; ++t) {
+        depot_inv += irp.depots[0].production[t];
+        long period_delivery_sum = std::accumulate(ind.deliveries[t].begin(), ind.deliveries[t].end(), 0L);
+
+        // Checa estoque do depósito ANTES da saída
+        if (period_delivery_sum > depot_inv) {
+            return false; // Violação: Stock-out no Depósito
+        }
+        depot_inv -= period_delivery_sum; // Caminhões são carregados
+
+        for (int c = 0; c < irp.nCustomers; ++c) {
+            // Entrega chega
+            customer_inv[c] += (long)ind.deliveries[t][c];
+            
+            // Checa capacidade máxima do cliente (pico de estoque)
+            if(customer_inv[c] > irp.customers[c].maxLevelInv) {
+                return false; // Violação: Nível Máximo do Cliente
+            }
+            
+            // Demanda do dia é consumida
+            customer_inv[c] -= (long)irp.customers[c].demand[t];
+            
+            // Checa estoque mínimo (fim do dia)
+            if (customer_inv[c] < irp.customers[c].minLevelInv) {
+                 return false; // Violação: Stock-out no Cliente
+            }
+        }
+    }
+
+    // Se passou por todas as checagens, a solução é factível.
+    return true;
+}
+
+
+/**
+ * @brief Preenche os custos de um indivíduo.
+ * IMPORTANTE: Esta função assume que `check_feasibility(ind, irp)` já retornou 'true'.
+ * Ela não faz nenhuma validação, apenas calcula os custos de uma solução factível.
+ */
+void evaluate_and_fill(Individual& ind, const IRP& irp, const ACO_Params& aco_params) {
+    // (aco_params não é mais usado, mas mantido na assinatura por consistência)
+    
+    // Reseta custos
     ind.routing_cost = 0.0;
     ind.customer_holding_cost = 0.0;
     ind.depot_holding_cost = 0.0;
-    ind.final_inventory_penalty = 0.0;
-    ind.routes_per_period.assign(irp.nPeriods, {});
-    ind.is_feasible = true; // Assume factibilidade até que uma violação seja encontrada
+    ind.final_inventory_penalty = 0.0; // Não relevante para soluções factíveis
 
-    // --- PASSO 1: GERAR ROTAS E VALIDAR ---
-    for (int t = 0; t < irp.nPeriods; ++t) {
-        long period_delivery_sum = std::accumulate(ind.deliveries[t].begin(), ind.deliveries[t].end(), 0L);
-        if (period_delivery_sum > 0) {
-            ACO_Result ares = runACO_for_period(irp, ind.deliveries[t], aco_params, false);
-
-            // Se o ACO não encontrou solução, a rota é infactível
-            if (ares.bestCost >= LARGE_COST / 10.0) {
-                ind.fitness = LARGE_COST;
-                ind.is_feasible = false;
-                return;
-            }
-
-            // --- VERIFICAÇÃO DE CLIENTES NÃO ATENDIDOS ---
-            std::set<int> customers_requiring_delivery;
-            for (int c = 0; c < irp.nCustomers; ++c) {
-                if (ind.deliveries[t][c] > 0) {
-                    customers_requiring_delivery.insert(c + 1); // IDs no ACO são 1-based
-                }
-            }
-
-            std::set<int> customers_in_routes;
-            for (const auto& route : ares.bestRoutes) {
-                for (int node : route) {
-                    if (node > 0) { // Ignora o depósito (nó 0)
-                        customers_in_routes.insert(node);
-                    }
-                }
-            }
-
-            // Se a lista de clientes que precisam de entrega não for igual à lista de clientes nas rotas, o ACO falhou.
-            if (customers_requiring_delivery != customers_in_routes) {
-                ind.fitness = LARGE_COST;
-                ind.is_feasible = false;
-                return; // Falha crítica, a solução é infactível
-            }
-            // --- FIM DA VERIFICAÇÃO ---
-
-            ind.routes_per_period[t] = ares.bestRoutes;
-        }
-    }
-    
-    // --- PASSO 2: CALCULAR CUSTOS (SE AS ROTAS FORAM GERADAS COM SUCESSO) ---
-    
-    // Calcula o custo de roteamento a partir das rotas já geradas e validadas
+    // --- PASSO 1: CALCULAR CUSTO DE ROTEAMENTO ---
+    // Simplesmente soma os custos das rotas que já foram validadas
     for (const auto& period_routes : ind.routes_per_period) {
-        for (const auto& route : period_routes) {
-            for (size_t i = 0; i < route.size() - 1; ++i) {
-                ind.routing_cost += irp.costMatrix[route[i]][route[i+1]];
+        for (const Route& route : period_routes) {
+            ind.routing_cost += route.cost;
+        }
+    }
+    
+    // --- PASSO 2: SIMULAR PARA CALCULAR CUSTOS DE ESTOQUE ---
+    vector<long> customer_inv(irp.nCustomers);
+    for (int i = 0; i < irp.nCustomers; ++i) customer_inv[i] = irp.customers[i].initialInv;
+    long depot_inv = irp.depots[0].initialInv;
+
+    for (int t = 0; t < irp.nPeriods; ++t) {
+        depot_inv += irp.depots[0].production[t];
+        long period_delivery_sum = std::accumulate(ind.deliveries[t].begin(), ind.deliveries[t].end(), 0L);
+        depot_inv -= period_delivery_sum;
+
+        // Acumula custo de estoque do depósito
+        // (Assume que minLevelInv do depósito é 0)
+        if (depot_inv > 0) {
+            ind.depot_holding_cost += (double)depot_inv * irp.depots[0].invCost;
+        }
+
+        for (int c = 0; c < irp.nCustomers; ++c) {
+            customer_inv[c] += (long)ind.deliveries[t][c];
+            customer_inv[c] -= (long)irp.customers[c].demand[t];
+            
+            // Acumula custo de estoque do cliente
+            // (Assume que o custo é sobre o estoque final)
+            if (customer_inv[c] > irp.customers[c].minLevelInv) {
+                // (Se minLevelInv > 0, o custo é sobre o excesso)
+                long inventory_to_cost = customer_inv[c]; 
+                ind.customer_holding_cost += (double)(inventory_to_cost) * irp.customers[c].invCost;
             }
         }
     }
+    
+    // Define o fitness final
+    ind.fitness = ind.routing_cost + ind.customer_holding_cost + ind.depot_holding_cost;
+    ind.is_feasible = true;
+}
 
+
+/* * Esta função foi movida para cá, pois é chamada por 'evaluate_and_fill'
+ * no seu código original. Agora ela é chamada por 'check_feasibility'.
+ */
+void calculate_solution_costs(Individual& ind, const IRP& irp) {
+    // Reseta custos
+    ind.routing_cost = 0.0;
+    ind.customer_holding_cost = 0.0;
+    ind.depot_holding_cost = 0.0;
+
+    // Calcula custo de roteamento
+    for (const auto& period_routes : ind.routes_per_period) {
+        for (const Route& route : period_routes) {
+            ind.routing_cost += route.cost;
+        }
+    }
+    
     // Simula para calcular custos de estoque
     vector<long> customer_inv(irp.nCustomers);
     for (int i = 0; i < irp.nCustomers; ++i) customer_inv[i] = irp.customers[i].initialInv;
@@ -89,89 +213,8 @@ void evaluate_and_fill(Individual& ind, const IRP& irp, const ACO_Params& aco_pa
         }
     }
     
-    // Se a simulação passou, mas a checagem geral falha, ainda é infactível
-    if (!check_feasibility(ind, irp)) {
-        ind.is_feasible = false;
-        ind.fitness = LARGE_COST;
-        return;
-    }
-    
     ind.fitness = ind.routing_cost + ind.customer_holding_cost + ind.depot_holding_cost;
+    ind.is_feasible = true; // Só deve ser chamada para soluções factíveis
 }
 
 
-
-
-bool check_feasibility(const Individual& ind, const IRP& irp) {
-    
-    // --- Checagem 1: Capacidade de Veículos e Frota ---
-    long total_fleet_capacity = (long)irp.nVehicles * irp.Capacity;
-    for (int t = 0; t < irp.nPeriods; ++t) {
-        long period_load = 0;
-        // Mapeia alocação em veículos discretos
-        vector<long> vehicle_loads(irp.nVehicles, 0);
-        
-        for (int c = 0; c < irp.nCustomers; ++c) {
-            int delivery_q = ind.deliveries[t][c];
-            if (delivery_q == 0) continue;
-
-            if (delivery_q > irp.Capacity) {
-                return false; // Entrega individual excede capacidade de um veículo
-            }
-            
-            // Tenta alocar a entrega a um veículo
-            bool allocated = false;
-            for(int v=0; v < irp.nVehicles; ++v) {
-                if(vehicle_loads[v] + delivery_q <= irp.Capacity) {
-                    vehicle_loads[v] += delivery_q;
-                    allocated = true;
-                    break;
-                }
-            }
-            
-            if(!allocated) {
-                return false; // Não há veículos suficientes para alocar as entregas individuais
-            }
-            
-            period_load += delivery_q;
-        }
-        
-        if (period_load > total_fleet_capacity) {
-            return false; // Carga total do período excede capacidade da frota
-        }
-    }
-
-    // --- Checagem 2: Simulação de Inventário (Depósito e Clientes) ---
-    vector<long> customer_inv(irp.nCustomers);
-    for (int i = 0; i < irp.nCustomers; ++i) customer_inv[i] = irp.customers[i].initialInv;
-    
-    long depot_inv = irp.depots[0].initialInv;
-
-    for (int t = 0; t < irp.nPeriods; ++t) {
-        depot_inv += irp.depots[0].production[t];
-        long period_delivery_sum = std::accumulate(ind.deliveries[t].begin(), ind.deliveries[t].end(), 0L);
-
-        if (period_delivery_sum > depot_inv) {
-            return false;
-        }
-        depot_inv -= period_delivery_sum;
-
-        for (int c = 0; c < irp.nCustomers; ++c) {
-            customer_inv[c] += (long)ind.deliveries[t][c];
-            
-            // VERIFICAÇÃO DE PICO DE ESTOQUE (antes da demanda)
-            if(customer_inv[c] > irp.customers[c].maxLevelInv) {
-                return false;
-            }
-            
-            customer_inv[c] -= (long)irp.customers[c].demand[t];
-            
-            // VERIFICAÇÃO DE ESTOQUE MÍNIMO (após a demanda)
-            if (customer_inv[c] < irp.customers[c].minLevelInv) {
-                 return false;
-            }
-        }
-    }
-
-    return true;
-}

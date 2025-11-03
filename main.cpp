@@ -1,3 +1,10 @@
+/*
+ * ARQUIVO: main.cpp (ATUALIZADO)
+ * - Inclui os cabeçalhos necessários (route.hpp é puxado por ga.hpp/evaluation.hpp).
+ * - Modifica o loop final de impressão para usar a nova struct Route e seus membros
+ * (.visits, .remaining_capacity, .cost).
+ */
+
 #include "irp.hpp"
 #include "ga.hpp"
 #include "parameters.hpp"
@@ -52,6 +59,8 @@ int main(int argc, char** argv) {
         irp.readDataFromFile(instance_file);
     }
     
+
+    
     std::cout << "Instância lida: " << instance_file << "\n";
     std::cout << "Semente aleatória: " << seed << "\n";
     
@@ -86,21 +95,36 @@ int main(int argc, char** argv) {
     std::cout << "  Custo Total (Fitness Final): ............ " << bestOverall.fitness << "\n";
     std::cout << "  Solução é " << (bestOverall.is_feasible ? "FACTÍVEL" : "INFACTÍVEL") << "\n";
 
+    // --- BLOCO MODIFICADO ---
     std::cout << "\n--- Rotas da Melhor Solução por Período ---\n";
     for (int t = 0; t < irp.nPeriods; ++t) {
         std::cout << "Periodo " << t << ":\n";
+        
+        // bestOverall.routes_per_period[t] agora é um std::vector<Route>
         if (bestOverall.routes_per_period[t].empty()) {
             std::cout << "  sem entregas.\n";
         } else {
+            // Itera sobre cada 'struct Route'
             for (size_t r = 0; r < bestOverall.routes_per_period[t].size(); ++r) {
+                
+                // Pega a referência da rota
+                const Route& route = bestOverall.routes_per_period[t][r];
+                
                 std::cout << "    Rota " << r << ": ";
-                for (size_t i = 0; i < bestOverall.routes_per_period[t][r].size(); ++i) {
-                    std::cout << bestOverall.routes_per_period[t][r][i] << (i + 1 < bestOverall.routes_per_period[t][r].size() ? " " : "");
+                
+                // Itera sobre o membro '.visits' da struct
+                for (size_t i = 0; i < route.visits.size(); ++i) {
+                    std::cout << route.visits[i] << (i + 1 < route.visits.size() ? " " : "");
                 }
-                std::cout << "\n";
+                
+                // Imprime as métricas armazenadas na struct da rota
+                int load = irp.Capacity - route.remaining_capacity;
+                std::cout << " (Carga: " << load << "/" << irp.Capacity
+                          << ", Custo: " << route.cost << ")\n";
             }
         }
     }
+    // --- FIM DO BLOCO MODIFICADO ---
     
     exportAndPlotRoutes(irp, bestOverall, aco_params, "routes_data.txt", "plot_routes.py");
     

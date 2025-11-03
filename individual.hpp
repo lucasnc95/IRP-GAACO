@@ -1,14 +1,23 @@
+/*
+ * ARQUIVO MODIFICADO: individual.hpp
+ * Atualiza a struct Individual para usar a nova struct Route.
+ */
 #ifndef INDIVIDUAL_HPP
 #define INDIVIDUAL_HPP
 
 #include <vector>
+#include <map> // Necessário para std::map
+#include "route.hpp" // <-- MUDANÇA: Inclui a nova struct de Rota
 
 struct Individual {
     // A genética: O plano de entregas
     std::vector<std::vector<int>> deliveries;
 
     // --- A solução decodificada e seus custos (preenchidos pela avaliação) ---
-    std::vector<std::vector<std::vector<int>>> routes_per_period;
+    
+    // <-- MUDANÇA: A representação das rotas foi alterada
+    std::vector<std::vector<Route>> routes_per_period; 
+    
     double routing_cost;
     double customer_holding_cost;
     double depot_holding_cost;
@@ -27,7 +36,9 @@ struct Individual {
     // Construtor para inicializar com o tamanho correto e valores padrão
     Individual(int nPeriods = 0, int nCustomers = 0) {
         deliveries.assign(nPeriods, std::vector<int>(nCustomers, 0));
-        routes_per_period.resize(nPeriods);
+        
+        // <-- MUDANÇA: Redimensiona o vetor externo de rotas
+        routes_per_period.resize(nPeriods); 
 
         // <-- MUDANÇA: Inicializa as novas matrizes com o tamanho correto
         min_delivery_matrix.assign(nPeriods, std::vector<int>(nCustomers, 0));

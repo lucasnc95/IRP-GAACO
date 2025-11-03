@@ -14,5 +14,6 @@ void evaluate_and_fill(
 
 // Função de verificação de factibilidade
 bool check_feasibility(const Individual& ind, const IRP& irp);
+void calculate_solution_costs(Individual& ind, const IRP& irp);
 
 #endif // EVALUATION_HPP

@@ -1,3 +1,7 @@
+/*
+ * ARQUIVO MODIFICADO: aco.cpp
+ * Reescrito para construir e avaliar a nova struct Route.
+ */
 #include "aco.hpp"
 #include "utils.hpp"
 #include "local_search.hpp"
@@ -9,6 +13,17 @@
 
 using std::vector;
 
+// --- Função auxiliar interna para calcular o custo de uma rota ---
+// (Necessária para a construção inicial da rota pela formiga)
+static double calculate_route_cost_helper(const vector<int>& visits, const vector<vector<double>>& dist) {
+    double cost = 0.0;
+    for (size_t i = 0; i < visits.size() - 1; ++i) {
+        cost += dist[visits[i]][visits[i+1]];
+    }
+    return cost;
+}
+
+
 ACO_Result runACO_for_period(const IRP& irp,
                              const vector<int>& deliveries_for_period,
                              const ACO_Params& params,
@@ -17,7 +32,7 @@ ACO_Result runACO_for_period(const IRP& irp,
     int nCust = irp.nCustomers;
     const double LARGE = 1e14;
 
-    // Checagens iniciais de factibilidade
+    // Checagens iniciais de factibilidade (sem mudanças)
     long totalCapacity = (long)irp.nVehicles * irp.Capacity;
     long sumDeliveries = 0;
     for (int c = 0; c < nCust; ++c) sumDeliveries += deliveries_for_period[c];
@@ -32,7 +47,7 @@ ACO_Result runACO_for_period(const IRP& irp,
         }
     }
 
-    // Monta a matriz de distância local para o ACO (0=depot, 1..N=customers)
+    // Matriz de distância local (sem mudanças)
     int depotIndex = 0;
     int baseIdx = irp.nDepots;
     int N = 1 + nCust;
@@ -43,14 +58,17 @@ ACO_Result runACO_for_period(const IRP& irp,
         dist[i][j] = irp.costMatrix[ii][jj];
     }
 
-    // Inicializa matrizes de feromônio e heurística
+    // Matrizes de feromônio e heurística (sem mudanças)
     vector<vector<double>> tau(N, vector<double>(N, 1.0));
     vector<vector<double>> eta(N, vector<double>(N, 0.0));
     for (int i = 0; i < N; ++i) for (int j = 0; j < N; ++j)
         if (i != j) eta[i][j] = 1.0 / std::max(1e-9, dist[i][j]);
 
     double best_global_cost = LARGE;
-    vector<vector<int>> best_global_routes;
+    
+    // <-- MUDANÇA: Agora é um vetor de structs Route -->
+    vector<Route> best_global_routes;
+    
     bool anyFeasibleFound = false;
 
     // Loop principal do ACO
@@ -62,16 +80,20 @@ ACO_Result runACO_for_period(const IRP& irp,
             vector<int> unserved;
             for (int i = 0; i < nCust; ++i) if (deliveries_for_period[i] > 0) unserved.push_back(i+1);
             
-            vector<vector<int>> antRoutes;
+            // <-- MUDANÇA: Agora é um vetor de structs Route -->
+            vector<Route> antRoutes;
             double antCost = 0.0;
             bool feasibleAnt = true;
 
             // Constrói as rotas para a formiga atual
             for (int veh = 0; veh < irp.nVehicles && !unserved.empty(); ++veh) {
-                int remainingCap = irp.Capacity;
+                
+                // <-- MUDANÇA: Cria e inicializa a struct Route -->
+                Route current_route;
+                current_route.remaining_capacity = irp.Capacity;
+                current_route.visits.push_back(0); // Começa no depósito
+                
                 int cur = 0;
-                vector<int> route;
-                route.push_back(0);
                 int safety = 0;
                 const int SAFETY_LIMIT = std::max(100, nCust * 10);
                 
@@ -80,10 +102,14 @@ ACO_Result runACO_for_period(const IRP& irp,
 
                     vector<int> candidates;
                     for (int node : unserved) {
-                        if (deliveries_for_period[node - 1] <= remainingCap) candidates.push_back(node);
+                        // <-- MUDANÇA: Checa a capacidade restante da struct -->
+                        if (deliveries_for_period[node - 1] <= current_route.remaining_capacity) {
+                            candidates.push_back(node);
+                        }
                     }
-                    if (candidates.empty()) break;
+                    if (candidates.empty()) break; // Nenhum cliente cabe, fecha a rota
 
+                    // Lógica de seleção de candidatos (sem mudanças)
                     double sum = 0.0;
                     vector<double> weights(candidates.size());
                     for (size_t k = 0; k < candidates.size(); ++k) {
@@ -110,31 +136,36 @@ ACO_Result runACO_for_period(const IRP& irp,
                     auto it = find(unserved.begin(), unserved.end(), chosenNode);
                     if (it != unserved.end()) unserved.erase(it);
                     
-                    route.push_back(chosenNode);
-                    remainingCap -= deliveries_for_period[chosenNode - 1];
+                    // <-- MUDANÇA: Atualiza a struct Route -->
+                    current_route.visits.push_back(chosenNode);
+                    current_route.remaining_capacity -= deliveries_for_period[chosenNode - 1];
                     cur = chosenNode;
                 }
                 
-                if (route.size() > 1) {
-                    route.push_back(0);
-                    antRoutes.push_back(route);
+                if (!feasibleAnt) break;
+
+                // <-- MUDANÇA: Finaliza e armazena a struct Route -->
+                if (current_route.visits.size() > 1) { // Se visitou alguém
+                    current_route.visits.push_back(0); // Retorna ao depósito
+                    // Calcula o custo inicial da rota
+                    current_route.cost = calculate_route_cost_helper(current_route.visits, dist);
+                    antRoutes.push_back(current_route);
                 }
-            }
+            } // Fim do loop de veículos
 
             if (!unserved.empty()) feasibleAnt = false;
 
             if (feasibleAnt && !antRoutes.empty()) {
                 
-                antCost = 0.0;
-                for (const auto& route : antRoutes) {
-                    for (size_t p = 0; p + 1 < route.size(); ++p) {
-                        antCost += dist[route[p]][route[p+1]];
-                    }
+                // <-- MUDANÇA: A busca local agora opera em 'vector<Route>' -->
+                if (randreal() < params.pLocalSearch) {
+                    improve_routes(antRoutes, irp, deliveries_for_period, dist, verbose);
                 }
                 
-                if (randreal() < params.pLocalSearch) {
-                    double savings = improve_routes(antRoutes, irp, deliveries_for_period, dist, verbose);
-                    antCost -= savings;
+                // <-- MUDANÇA: Custo total é somado dos custos da struct -->
+                antCost = 0.0;
+                for (const auto& route : antRoutes) {
+                    antCost += route.cost;
                 }
                 
                 anyFeasibleFound = true;
@@ -143,10 +174,11 @@ ACO_Result runACO_for_period(const IRP& irp,
                     best_global_routes = antRoutes;
                 }
                 
+                // Depósito de feromônio (lógica interna sem mudanças)
                 double deposit = params.Q / std::max(1.0, antCost);
                 for (const auto& route : antRoutes) {
-                    for (size_t p = 0; p + 1 < route.size(); ++p) {
-                        int u = route[p], v = route[p+1];
+                    for (size_t p = 0; p + 1 < route.visits.size(); ++p) {
+                        int u = route.visits[p], v = route.visits[p+1];
                         delta[u][v] += deposit;
                         delta[v][u] += deposit;
                     }
@@ -154,7 +186,7 @@ ACO_Result runACO_for_period(const IRP& irp,
             }
         } // Fim do loop das formigas
 
-        // Evaporação e atualização do feromônio
+        // Evaporação (sem mudanças)
         for (int i = 0; i < N; ++i) for (int j = 0; j < N; ++j) {
             tau[i][j] = (1.0 - params.rho) * tau[i][j] + delta[i][j];
             if (tau[i][j] < 1e-12) tau[i][j] = 1e-12;
@@ -167,7 +199,7 @@ ACO_Result runACO_for_period(const IRP& irp,
         res.bestRoutes.clear();
     } else {
         res.bestCost = best_global_cost;
-        res.bestRoutes = best_global_routes;
+        res.bestRoutes = best_global_routes; // Retorna o vetor<Route>
     }
     return res;
 }

@@ -9,8 +9,7 @@
 #include <string>
 
 Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, const ACO_Params& aco_params, bool verbose);
-Individual make_simple_random_individual(const IRP& irp);
-Individual make_simple_random_individual_2(const IRP& irp);
+bool check_aco_consistency(const std::vector<int>& deliveries, const std::vector<Route>& routes);
 
 
 std::pair<Individual, Individual> one_point_crossover_customer(const Individual& a, const Individual& b, const IRP& irp);
