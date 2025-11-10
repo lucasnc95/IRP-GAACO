@@ -1,69 +1,74 @@
-/*
- * ARQUIVO MODIFICADO: ds_operator.hpp
- * A struct ReinsertionData foi expandida para armazenar custos e rotas
- * antes e depois da remoção do cliente, permitindo a impressão
- * detalhada dos resultados da operação.
- */
-
 #ifndef DS_OPERATOR_HPP
 #define DS_OPERATOR_HPP
 
+#include <vector>
+#include <gurobi_c++.h> // Incluído para o Gurobi
 #include "irp.hpp"
 #include "individual.hpp"
 #include "parameters.hpp"
-#include <vector>
 
-/**
- * @struct PiecewiseLinearCost
- * @brief Armazena a função de custo de inserção F_t(q_t) como breakpoints.
- * (Struct permanece como na resposta anterior)
- */
-struct PiecewiseLinearCost {
-    std::vector<int> q_breakpoints; 
-    std::vector<double> cost_values; 
+
+struct GurobiPWLCurve {
+    std::vector<double> q_points;    // pontos x (quantidade)
+    std::vector<double> cost_points; // pontos y (custo de frete)
 };
 
-/**
- * @struct ReinsertionData
- * @brief Contém todos os dados necessários para o DSI de um cliente.
- *
- * Armazena o custo de inserção e a capacidade de estoque
- * para cada período do horizonte.
- */
+
+struct GurobiInventoryResult {
+    std::vector<double> q;  // entregas ótimas por período
+    std::vector<double> S;  // inventários ótimos por período
+    double totalCost;       // Custo total 
+};
+
+
 struct ReinsertionData {
-    int customer_id = -1;
+    int customer_id = -1; 
     
-    // --- NOVOS CAMPOS PARA LOGGING ---
-    double cost_before_removal; // Custo (fitness) da solução original
-    std::vector<std::vector<Route>> routes_before_removal; // Rotas da solução original
-    double cost_after_removal; // Custo da solução (sem o cliente)
-    std::vector<std::vector<Route>> routes_after_removal; // Rotas reroteirizadas
-    // --- FIM DOS NOVOS CAMPOS ---
+    // Dados "ANTES"
+    double cost_before_removal;
+    std::vector<std::vector<Route>> routes_before_removal;
     
-    // Dados para a DP (como antes)
-    std::vector<PiecewiseLinearCost> insertion_cost_functions; 
-    std::vector<long> max_q_inventory; 
+    // Dados "DEPOIS" (sem o cliente)
+    double cost_after_removal;
+    std::vector<std::vector<Route>> routes_after_removal;
+    Individual solution_without_customer; // Solução temporária (genótipo + fenótipo)
+    
+    // Dados para o Gurobi
+    std::vector<GurobiPWLCurve> insertion_cost_curves; // Vetor de F_t(q_t)
+    std::vector<long> max_q_inventory; // Vetor de U_i - I_{i,t-1}
 
     ReinsertionData(int nPeriods = 0) {
-        insertion_cost_functions.resize(nPeriods);
-        max_q_inventory.resize(nPeriods, 0);
         cost_before_removal = 0.0;
         cost_after_removal = 0.0;
         routes_before_removal.resize(nPeriods);
         routes_after_removal.resize(nPeriods);
+        insertion_cost_curves.resize(nPeriods);
+        max_q_inventory.resize(nPeriods, 0);
     }
 };
 
 
-/**
- * @brief Sorteia um cliente, o remove e calcula seus dados de reinserção.
- */
+
+GurobiInventoryResult computePerfectInventory_Gurobi(
+    const Customer& cust,
+    const Depot& depot,
+    const std::vector<double>& reinsertion_cost_fixed,
+    const std::vector<GurobiPWLCurve>& reinsertion_curves,
+    int T, double qmax
+);
+
+
 ReinsertionData calculate_reinsertion_data(
     const Individual& original_ind, 
     const IRP& irp, 
-    const ACO_Params& aco_params
+    const ACO_Params& aco_params,
+    int c_id_internal // ID do cliente a ser removido (0-based)
 );
+
+
+void busca_local(Individual& original_sol, const IRP& irp, const ACO_Params& aco_params, bool verbose);
+
 
 void print_routes_for_period(const std::vector<Route>& routes, const IRP& irp, int t);
 
-#endif // DS_OPERATOR_HPP
+#endif 

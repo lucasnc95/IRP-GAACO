@@ -1,7 +1,9 @@
+#include "ds_operator.hpp"
 #include "ga.hpp"
 #include "utils.hpp"
-#include "evaluation.hpp"
-#include "ds_operator.hpp"
+#include "evaluation.hpp" 
+#include "aco.hpp"
+#include "route.hpp"
 #include <iostream>
 #include <vector>
 #include <numeric>
@@ -15,397 +17,67 @@
 
 using std::vector;
 
-void sua_futura_busca_local(Individual& sol, const IRP& irp, const ACO_Params& aco_params) {
-    
-    // 1. CHAMA A FUNÇÃO DE ANÁLISE
-    //    Ela clona, sorteia um cliente, remove, reroteiriza, e calcula tudo.
-    ReinsertionData data = calculate_reinsertion_data(sol, irp, aco_params);
-    
-    int c = data.customer_id; // O cliente (0-based) que foi removido
 
-    std::cout << "\n======================================================\n";
-    std::cout << "=== INÍCIO DA ANÁLISE (Busca Local - Cliente " << (c + 1) << ") ===\n";
-    std::cout << "======================================================\n";
 
-    // 2. IMPRIME O ESTADO "ANTES"
-    std::cout << "\n--- ESTADO ANTES DA REMOÇÃO (Solução Original) ---\n";
-    std::cout << std::fixed << std::setprecision(2);
-    std::cout << "Custo Total Original: " << data.cost_before_removal << "\n";
-    std::cout << "Rotas Originais (Cliente " << (c + 1) << " incluído):\n";
-    for (int t = 0; t < irp.nPeriods; ++t) {
-        print_routes_for_period(data.routes_before_removal[t], irp, t);
-    }
-
-    // 3. IMPRIME O ESTADO "DEPOIS"
-    std::cout << "\n--- ESTADO DEPOIS DA REMOÇÃO (Cliente " << (c + 1) << " removido) ---\n";
-    std::cout << "Custo da Solução Parcial: " << data.cost_after_removal << "\n";
-    std::cout << "Rotas Reroteirizadas (Sem Cliente " << (c + 1) << "):\n";
-    for (int t = 0; t < irp.nPeriods; ++t) {
-        print_routes_for_period(data.routes_after_removal[t], irp, t);
-    }
-    
-    double custo_remocao = data.cost_before_removal - data.cost_after_removal;
-    std::cout << ">>> Custo de Remoção do Cliente " << (c + 1) << ": " << custo_remocao << " <<<\n";
-
-    // 4. IMPRIME OS DADOS DE REINSERÇÃO CALCULADOS
-    std::cout << "\n--- DADOS DE REINSERÇÃO (Para Programação Dinâmica) ---\n";
-    for (int t = 0; t < irp.nPeriods; ++t) {
-        std::cout << "  Periodo " << t << ":\n";
-        
-        // Imprime o máximo que pode ser entregue (Restrição de Inventário)
-        std::cout << "    Max. Qtd. Inventário (U_i - I_{t-1}): " << data.max_q_inventory[t] << "\n";
-        
-        // Imprime a função de custo (Restrição de Roteamento)
-        std::cout << "    Função de Custo de Rota (F_t(q)) [Formato Gurobi]:\n";
-        
-        const auto& ft = data.insertion_cost_functions[t];
-        if (ft.q_breakpoints.empty()) {
-            std::cout << "      (Nenhuma opção de inserção encontrada)\n";
-            continue;
-        }
-
-        std::cout << "      q_pts = {";
-        for(size_t i=0; i<ft.q_breakpoints.size(); ++i) {
-            std::cout << ft.q_breakpoints[i] << (i == ft.q_breakpoints.size() - 1 ? "" : ", ");
-        }
-        std::cout << "}\n";
-        
-        std::cout << "      c_pts = {"; // c_pts são os CUSTOS (gamma)
-        for(size_t i=0; i<ft.cost_values.size(); ++i) {
-            std::cout << ft.cost_values[i] << (i == ft.cost_values.size() - 1 ? "" : ", ");
-        }
-        std::cout << "}\n";
-    }
-
-    std::cout << "======================================================\n";
-    std::cout << "=== FIM DA ANÁLISE (Cliente " << (c + 1) << ") ===\n";
-    std::cout << "======================================================\n\n";
-
-    // 5. AQUI VIRIA A LÓGICA DA SUA BUSCA LOCAL
-    //    (ex: uma Programação Dinâmica que usa esses dados para
-    //     encontrar o novo plano ótimo de entregas para o cliente 'c')
-}
-
-bool check_aco_consistency(const vector<int>& deliveries, const vector<Route>& routes) {
+static bool check_aco_consistency(const vector<int>& deliveries, const vector<Route>& routes) {
     std::set<int> customers_requiring_delivery;
     for (int c = 0; c < deliveries.size(); ++c) {
         if (deliveries[c] > 0) {
             customers_requiring_delivery.insert(c + 1); // 1-based
         }
     }
-
     std::set<int> customers_in_routes;
     for (const Route& route : routes) {
         for (int node : route.visits) {
-            if (node > 0) { // Ignora o depósito (nó 0)
-                customers_in_routes.insert(node);
-            }
+            if (node > 0) customers_in_routes.insert(node);
         }
     }
     return customers_requiring_delivery == customers_in_routes;
 }
 
 
-Individual make_new_heuristic_individual(const IRP& irp, const ACO_Params& aco_params) {
-    Individual ind(irp.nPeriods, irp.nCustomers);
-    vector<long> current_inv(irp.nCustomers);
-    for(int i = 0; i < irp.nCustomers; ++i) current_inv[i] = irp.customers[i].initialInv;
-
-    long fleet_capacity = (long)irp.nVehicles * irp.Capacity;
-    const double LARGE_COST = 1e18;
-    
-    // Simulação dia a dia
-    for (int t = 0; t < irp.nPeriods; ++t) {
-        vector<int> min_deliveries_today(irp.nCustomers, 0);
-        long period_load_min = 0;
-
-        // --- PASSO 1: CALCULAR ENTREGAS MÍNIMAS OBRIGATÓRIAS ---
-        for (int c = 0; c < irp.nCustomers; ++c) {
-            long inv_after_demand = current_inv[c] - irp.customers[c].demand[t];
-            
-            if (inv_after_demand < irp.customers[c].minLevelInv) {
-                // Cálculo da quantidade mínima exata necessária
-                long needed = irp.customers[c].minLevelInv - inv_after_demand;
-                
-                // Verifica o espaço disponível no cliente (não pode exceder U_i)
-                long space_available = irp.customers[c].maxLevelInv - current_inv[c];
-                
-                // A entrega é o mínimo entre o necessário, o espaço e a capacidade do veículo
-                long delivery_amount = std::min({needed, space_available, (long)irp.Capacity});
-                
-                if (delivery_amount > 0) {
-                    min_deliveries_today[c] = delivery_amount;
-                    period_load_min += delivery_amount;
-                }
-            }
-        }
-        
-        // Define o plano de entregas do dia como o plano mínimo
-        ind.deliveries[t] = min_deliveries_today;
-        long current_period_load = period_load_min;
-
-        // --- PASSO 2: ENTREGAS OPORTUNISTAS (30% de chance) ---
-        long remaining_fleet_cap = fleet_capacity - current_period_load;
-        
-        vector<int> customer_order(irp.nCustomers);
-        std::iota(customer_order.begin(), customer_order.end(), 0);
-        std::shuffle(customer_order.begin(), customer_order.end(), rng);
-
-        for (int c : customer_order) {
-            if (remaining_fleet_cap <= 0) break; // Frota do dia está cheia
-
-            // Tenta adicionar com 30% de chance
-            if (randreal() < 0.30) {
-                // Calcula a demanda de N períodos à frente (N=1, 2 ou 3)
-                int N = randint(1, 3);
-                long q_extra = 0;
-                for (int t_future = t + 1; t_future <= t + N && t_future < irp.nPeriods; ++t_future) {
-                    q_extra += irp.customers[c].demand[t_future];
-                }
-                
-                if (q_extra == 0) continue; // Sem demanda futura para adiantar
-
-                // --- Checagem Tripla de Viabilidade ---
-                
-                long current_delivery = ind.deliveries[t][c];
-                
-                // 1. O cliente tem espaço para o extra? (Capacidade Cliente)
-                long space = irp.customers[c].maxLevelInv - (current_inv[c] + current_delivery);
-                
-                // 2. A entrega total (mínima + extra) cabe em UM veículo? (Capacidade Veículo)
-                long max_q_vehicle = (long)irp.Capacity - current_delivery;
-
-                // 3. A frota do dia tem capacidade para o extra? (Capacidade Frota)
-                // (remaining_fleet_cap já considera a carga mínima)
-
-                // Limita o extra por todas as restrições
-                q_extra = std::min({q_extra, space, max_q_vehicle, remaining_fleet_cap});
-
-                // Adiciona a entrega oportunista se for válida
-                if (q_extra > 0) {
-                    ind.deliveries[t][c] += q_extra;
-                    remaining_fleet_cap -= q_extra;
-                    current_period_load += q_extra; // Atualiza a carga total do dia
-                }
-            }
-        } // Fim do Passo 2
-
-        // --- PASSO 3: ROTEAMENTO (COM ACO) ---
-        ACO_Result ares;
-        bool aco_success = false;
-        
-        // Tenta roteirizar o plano completo (Mínimo + Oportunista)
-        if (current_period_load > 0) {
-            ares = runACO_for_period(irp, ind.deliveries[t], aco_params, false);
-            
-            if (ares.bestCost < LARGE_COST / 10.0) {
-                // Checa se o ACO roteirizou todos os clientes que precisavam
-                aco_success = check_aco_consistency(ind.deliveries[t], ares.bestRoutes);
-            }
-        } else {
-            // Sem entregas hoje, sucesso trivial
-            aco_success = true;
-            ares.bestRoutes.clear();
-        }
-
-        // --- PASSO 4: REPARO (se o ACO falhou) ---
-        if (!aco_success && period_load_min > 0) {
-            // "Discarte o inventário [oportunista]... e refaça"
-            ind.deliveries[t] = min_deliveries_today; // Volta para o plano mínimo
-            
-            ares = runACO_for_period(irp, ind.deliveries[t], aco_params, false);
-            
-            if (ares.bestCost < LARGE_COST / 10.0) {
-                aco_success = check_aco_consistency(ind.deliveries[t], ares.bestRoutes);
-            } else {
-                aco_success = false;
-            }
-        }
-        
-        // Armazena as rotas se o ACO foi bem-sucedido
-        if (aco_success) {
-            ind.routes_per_period[t] = ares.bestRoutes;
-        } else {
-            // A solução será marcada como infactível no final,
-            // pois existe uma entrega obrigatória que não pôde ser roteirizada.
-            ind.routes_per_period[t].clear(); 
-            // Se min_deliveries_today > 0 e aco_success é false, a checagem
-            // de factibilidade final irá falhar.
-        }
-
-        // --- PASSO 5: ATUALIZA O INVENTÁRIO (para o próximo período t+1) ---
-        // Atualiza o inventário com base no plano de entregas FINAL (seja ele o
-        // completo ou o reparado/mínimo)
-        for (int c = 0; c < irp.nCustomers; ++c) {
-            current_inv[c] += (long)ind.deliveries[t][c] - irp.customers[c].demand[t];
-        }
-    } // Fim do loop 't'
-    
-    // --- PASSO 6: CÁLCULO DE CUSTOS E FACTIBILIDADE ---
-    // A função 'check_feasibility' fará a simulação final e
-    // verificará se o 'current_inv' nunca violou os limites.
-    if (check_feasibility(ind, irp)) {
-        calculate_solution_costs(ind, irp); // Calcula os custos finais
-    } else {
-        // Se a simulação do check_feasibility falhar (o que não deveria
-        // acontecer se a lógica aqui estiver correta), marque como infactível.
-        ind.is_feasible = false;
-        ind.fitness = LARGE_COST;
-    }
-    
-    return ind;
-}
-
-Individual make_simple_random_individual(const IRP& irp) {
-    Individual ind(irp.nPeriods, irp.nCustomers);
-    vector<long> current_inv(irp.nCustomers);
-    for(int i = 0; i < irp.nCustomers; ++i) current_inv[i] = irp.customers[i].initialInv;
-
-    double depot_inv_cost = irp.depots[0].invCost;
-    float dynamic_probability = randreal();
-
-    for (int t = 0; t < irp.nPeriods; ++t) {
-        vector<long> vehicle_loads(irp.nVehicles, 0);
-        vector<int> customer_to_vehicle_map(irp.nCustomers, -1);
-        vector<bool> is_mandatory(irp.nCustomers, false);
-
-        // --- PASSO 1: ATENDER ENTREGAS MÍNIMAS OBRIGATÓRIAS ---
-        for (int c = 0; c < irp.nCustomers; ++c) {
-            long inv_after_demand = current_inv[c] - irp.customers[c].demand[t];
-            if (inv_after_demand < irp.customers[c].minLevelInv) {
-                is_mandatory[c] = true;
-                long needed = irp.customers[c].minLevelInv - inv_after_demand;
-                
-                // Limita a entrega pelo espaço de "pico" e capacidade do veículo
-                long space_available = irp.customers[c].maxLevelInv - current_inv[c];
-                long delivery_amount = std::min({needed, space_available, (long)irp.Capacity});
-
-                if (delivery_amount <= 0) continue;
-
-                for (int v = 0; v < irp.nVehicles; ++v) {
-                    if (vehicle_loads[v] + delivery_amount <= irp.Capacity) {
-                        ind.deliveries[t][c] = delivery_amount;
-                        vehicle_loads[v] += delivery_amount;
-                        customer_to_vehicle_map[c] = v;
-                        break;
-                    }
-                }
-            }
-        }
-
-        // --- PASSO 2: ENTREGAS OPORTUNISTAS E DE "TOP-UP" ---
-        vector<int> customer_order(irp.nCustomers);
-        std::iota(customer_order.begin(), customer_order.end(), 0);
-        std::shuffle(customer_order.begin(), customer_order.end(), rng);
-
-        for (int c : customer_order) {
-            bool was_mandatory = is_mandatory[c];
-            if (!was_mandatory && randreal() >= dynamic_probability) {
-                continue;
-            }
-
-            long inv_before_topup = current_inv[c];
-            long current_delivery = ind.deliveries[t][c];
-
-            int vehicle_idx = customer_to_vehicle_map[c];
-            if (vehicle_idx == -1) {
-                for (int v = 0; v < irp.nVehicles; ++v) {
-                    if (vehicle_loads[v] < irp.Capacity) {
-                        vehicle_idx = v;
-                        break;
-                    }
-                }
-            }
-            if (vehicle_idx == -1) continue;
-
-            // Calcula o máximo que PODE ser adicionado, respeitando o "pico"
-            long space = irp.customers[c].maxLevelInv - (inv_before_topup + current_delivery);
-
-            long max_extra_q = std::min({
-                space,
-                (long)irp.Capacity - vehicle_loads[vehicle_idx]
-            });
-
-            if (max_extra_q > 0) {
-                int q_extra = 0;
-                if (irp.customers[c].invCost < depot_inv_cost) {
-                    q_extra = max_extra_q;
-                } else {
-                    q_extra = was_mandatory ? randint(0, max_extra_q) : randint(1, max_extra_q);
-                }
-
-                if (q_extra > 0) {
-                    ind.deliveries[t][c] += q_extra;
-                    vehicle_loads[vehicle_idx] += q_extra;
-                    customer_to_vehicle_map[c] = vehicle_idx;
-                }
-            }
-        }
-
-        // Atualiza o inventário para o próximo período
-        for (int c = 0; c < irp.nCustomers; ++c) {
-            current_inv[c] += (long)ind.deliveries[t][c] - irp.customers[c].demand[t];
-        }
-    }
-    return ind;
-}
 
 
 std::pair<Individual, Individual> one_point_crossover_customer(const Individual& a, const Individual& b, const IRP& irp) {
     Individual child1(irp.nPeriods, irp.nCustomers);
     Individual child2(irp.nPeriods, irp.nCustomers);
-    
     int crosspoint = randint(0, irp.nCustomers);
-
     for (int c = 0; c < irp.nCustomers; ++c) {
-        // Se c está antes do ponto de corte
         if (c < crosspoint) {
             for (int t = 0; t < irp.nPeriods; ++t) {
-                child1.deliveries[t][c] = a.deliveries[t][c]; // Filho 1 herda do Pai A
-                child2.deliveries[t][c] = b.deliveries[t][c]; // Filho 2 herda do Pai B
+                child1.deliveries[t][c] = a.deliveries[t][c];
+                child2.deliveries[t][c] = b.deliveries[t][c];
             }
-        } 
-        // Se c está depois do ponto de corte
-        else {
+        } else {
             for (int t = 0; t < irp.nPeriods; ++t) {
-                child1.deliveries[t][c] = b.deliveries[t][c]; // Filho 1 herda do Pai B
-                child2.deliveries[t][c] = a.deliveries[t][c]; // Filho 2 herda do Pai A
+                child1.deliveries[t][c] = b.deliveries[t][c];
+                child2.deliveries[t][c] = a.deliveries[t][c];
             }
         }
     }
     return {child1, child2};
 }
-
-// <-- MUDANÇA: Crossover de 2 pontos agora gera dois filhos complementares -->
 std::pair<Individual, Individual> two_point_crossover_customer(const Individual& a, const Individual& b, const IRP& irp) {
     Individual child1(irp.nPeriods, irp.nCustomers);
     Individual child2(irp.nPeriods, irp.nCustomers);
-
     int p1 = randint(0, irp.nCustomers);
     int p2 = randint(0, irp.nCustomers);
     if (p1 > p2) std::swap(p1, p2);
-
     for (int c = 0; c < irp.nCustomers; ++c) {
-        // Se c está dentro do segmento de troca
         if (c >= p1 && c < p2) {
             for (int t = 0; t < irp.nPeriods; ++t) {
-                child1.deliveries[t][c] = b.deliveries[t][c]; // Filho 1 herda do Pai B
-                child2.deliveries[t][c] = a.deliveries[t][c]; // Filho 2 herda do Pai A
+                child1.deliveries[t][c] = b.deliveries[t][c];
+                child2.deliveries[t][c] = a.deliveries[t][c];
             }
-        } 
-        // Se c está fora do segmento
-        else {
+        } else {
             for (int t = 0; t < irp.nPeriods; ++t) {
-                child1.deliveries[t][c] = a.deliveries[t][c]; // Filho 1 herda do Pai A
-                child2.deliveries[t][c] = b.deliveries[t][c]; // Filho 2 herda do Pai B
+                child1.deliveries[t][c] = a.deliveries[t][c];
+                child2.deliveries[t][c] = b.deliveries[t][c];
             }
         }
     }
     return {child1, child2};
 }
-
-
-
 
 Individual tournamentSelect(const vector<Individual>& pop, int k) {
     int n = pop.size();
@@ -420,122 +92,317 @@ Individual tournamentSelect(const vector<Individual>& pop, int k) {
 }
 
 
+// Individual make_new_heuristic_individual(const IRP& irp) {
+//     Individual ind(irp.nPeriods, irp.nCustomers);
+//     vector<long> current_inv(irp.nCustomers);
+//     for(int i = 0; i < irp.nCustomers; ++i) current_inv[i] = irp.customers[i].initialInv;
+
+//     long fleet_capacity = (long)irp.nVehicles * irp.Capacity;
+
+//     for (int t = 0; t < irp.nPeriods; ++t) {
+//         vector<int> min_deliveries_today(irp.nCustomers, 0);
+//         long period_load_min = 0;
+
+//         // --- PASSO 1: CALCULAR ENTREGAS MÍNIMAS OBRIGATÓRIAS ---
+//         for (int c = 0; c < irp.nCustomers; ++c) {
+//             long inv_after_demand = current_inv[c] - irp.customers[c].demand[t];
+            
+//             if (inv_after_demand < irp.customers[c].minLevelInv) {
+//                 long needed = irp.customers[c].minLevelInv - inv_after_demand;
+//                 long space_available = irp.customers[c].maxLevelInv - current_inv[c];
+//                 long delivery_amount = std::min({needed, space_available, (long)irp.Capacity});
+                
+//                 if (delivery_amount > 0) {
+//                     min_deliveries_today[c] = delivery_amount;
+//                     period_load_min += delivery_amount;
+//                 }
+//             }
+//         }
+        
+//         ind.deliveries[t] = min_deliveries_today;
+//         long current_period_load = period_load_min;
+        
+
+//         if (current_period_load > fleet_capacity) {
+//             for (int c = 0; c < irp.nCustomers; ++c) {
+//                 current_inv[c] += (long)ind.deliveries[t][c] - irp.customers[c].demand[t];
+//             }
+//             continue; // Pula para o próximo dia
+//         }
+
+//         // --- PASSO 2: ENTREGAS OPORTUNISTAS (30% de chance) ---
+//         long remaining_fleet_cap = fleet_capacity - current_period_load;
+        
+//         vector<int> customer_order(irp.nCustomers);
+//         std::iota(customer_order.begin(), customer_order.end(), 0);
+//         std::shuffle(customer_order.begin(), customer_order.end(), rng);
+
+//         for (int c : customer_order) {
+//             if (remaining_fleet_cap <= 0) break;
+            
+//             if (randreal() < 0.30) { 
+//                 int N = randint(1, irp.nPeriods-t);
+//                 long q_extra = 0;
+//                 for (int t_future = t + 1; t_future <= t + N && t_future < irp.nPeriods; ++t_future) {
+//                     q_extra += irp.customers[c].demand[t_future];
+//                 }
+//                 if (q_extra == 0) continue;
+                
+//                 long current_delivery = ind.deliveries[t][c];
+//                 long space = irp.customers[c].maxLevelInv - (current_inv[c] + current_delivery);
+//                 long max_q_vehicle = (long)irp.Capacity - current_delivery;
+                
+//                 q_extra = std::min({q_extra, space, max_q_vehicle, remaining_fleet_cap});
+
+//                 if (q_extra > 0) {
+//                     ind.deliveries[t][c] += q_extra;
+//                     remaining_fleet_cap -= q_extra;
+//                 }
+//             }
+//         } // Fim do Passo 2
+        
+//         // --- PASSO 3: ATUALIZA O INVENTÁRIO (para o próximo período t+1) ---
+//         for (int c = 0; c < irp.nCustomers; ++c) {
+//             current_inv[c] += (long)ind.deliveries[t][c] - irp.customers[c].demand[t];
+//             // Garante que o inventário não fique "negativo" para a simulação do dia seguinte
+//             if(current_inv[c] < irp.customers[c].minLevelInv) {
+//                 current_inv[c] = irp.customers[c].minLevelInv;
+//             }
+//         }
+//     } 
+    
+//     return ind;
+// }
+
+
+
+Individual make_new_heuristic_individual(const IRP& irp) {
+    Individual ind(irp.nPeriods, irp.nCustomers);
+    vector<long> current_inv(irp.nCustomers);
+    for(int i = 0; i < irp.nCustomers; ++i) current_inv[i] = irp.customers[i].initialInv;
+
+    long fleet_capacity = (long)irp.nVehicles * irp.Capacity;
+
+    for (int t = 0; t < irp.nPeriods; ++t) {
+        long period_load = 0;
+        vector<int> mandatory_custs, optional_custs;
+
+        for (int c = 0; c < irp.nCustomers; ++c) {
+            if (current_inv[c] < irp.customers[c].demand[t]) {
+                mandatory_custs.push_back(c);
+            } else {
+                optional_custs.push_back(c);
+            }
+        }
+
+        // Atende clientes obrigatórios
+        for (int c : mandatory_custs) {
+            long needed = irp.customers[c].demand[t] - current_inv[c];
+            long space = irp.customers[c].maxLevelInv - (current_inv[c] + needed);
+            int extra = (space > 0) ? randint(0, std::min((long)20, space)) : 0; // Adiciona um extra aleatório pequeno
+            int q = std::min((long)irp.Capacity, needed + extra);
+            
+            if (period_load + q <= fleet_capacity) {
+                ind.deliveries[t][c] = q;
+                period_load += q;
+            }
+        }
+        
+        // Atende clientes opcionais aleatoriamente
+        std::shuffle(optional_custs.begin(), optional_custs.end(), rng);
+        for (int c : optional_custs) {
+            if (period_load >= fleet_capacity) break;
+            if (randreal() < 0.3) { // Chance de atender um cliente opcional
+                long space = irp.customers[c].maxLevelInv - current_inv[c];
+                long max_q = std::min({space, (long)irp.Capacity, fleet_capacity - period_load});
+                if (max_q > 0) {
+                    int q = randint(1, max_q);
+                    ind.deliveries[t][c] = q;
+                    period_load += q;
+                }
+            }
+        }
+
+        // Atualiza o inventário para o próximo período
+        for (int c = 0; c < irp.nCustomers; ++c) {
+            current_inv[c] += (long)ind.deliveries[t][c] - irp.customers[c].demand[t];
+        }
+    }
+    return ind;
+}
+
+
+void build_routes_for_individual(Individual& ind, const IRP& irp, const ACO_Params& aco_params) {
+    ind.routes_per_period.assign(irp.nPeriods, std::vector<Route>());
+    const double LARGE_COST = 1e18;
+
+    for (int t = 0; t < irp.nPeriods; ++t) {
+        long period_delivery_sum = std::accumulate(ind.deliveries[t].begin(), ind.deliveries[t].end(), 0L);
+        
+        if (period_delivery_sum > 0) {
+            ACO_Result ares = runACO_for_period(irp, ind.deliveries[t], aco_params, false);
+            
+            // Armazena as rotas. Se o ACO falhou (custo alto), 
+            // as rotas estarão vazias ou inválidas, e 'check_feasibility' vai pegar.
+            if(ares.bestCost < LARGE_COST / 10.0) {
+                ind.routes_per_period[t] = ares.bestRoutes;
+            } else {
+                ind.routes_per_period[t].clear(); // Garante que está vazio se o ACO falhou
+            }
+        }
+    }
+}
+
 
 Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, const ACO_Params& aco_params, bool verbose) {
+    
+    const double LARGE_COST = 1e18;
     vector<Individual> pop;
     pop.reserve(ga_params.popSize);
     
     std::cout << "Inicializando população..." << std::endl;
     for (int i = 0; i < ga_params.popSize; ++i) {
-        // A 'make_new_heuristic_individual' já preenche 'deliveries' e 'routes_per_period'
-        pop.push_back(make_new_heuristic_individual(irp, aco_params));
+        Individual ind = make_new_heuristic_individual(irp);
+        
+        build_routes_for_individual(ind, irp, aco_params);
+        check_feasibility(ind, irp); 
+        
+        if (ind.is_feasible) {
+            calculate_total_cost(ind, irp);
+            if (verbose) std::cout << "Educando Indivíduo Inicial " << i << "...\n";
+            busca_local(ind, irp, aco_params, false); 
+        } else {
+            ind.fitness = LARGE_COST;
+            busca_local(ind, irp, aco_params, false); 
+        }
+        pop.push_back(ind);
     }
-    Individual indiv = make_new_heuristic_individual(irp, aco_params);
-    sua_futura_busca_local(indiv, irp, aco_params);
-    std::cout << "Avaliando população inicial..." << std::endl;
-    for (auto& ind : pop) {
-        // A 'evaluate_and_fill' agora apenas valida e calcula os custos
-        // das rotas e entregas JÁ EXISTENTES no indivíduo.
-        evaluate_and_fill(ind, irp, aco_params);
-    }
-
-    Individual bestOverall = *std::min_element(pop.begin(), pop.end(), 
-        [](const Individual& a, const Individual& b){ return a.fitness < b.fitness; });
+    std::cout << "População inicial educada e avaliada." << std::endl;
+    
+    std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b){
+        return a.fitness < b.fitness;
+    });
+    Individual bestOverall = pop.front();
     
     std::cout << "\nIniciando loop do GA para " << ga_params.nGen << " gerações..." << std::endl;
     for (int gen = 0; gen < ga_params.nGen; ++gen) {
+        std::cout<<std::endl;
+        std::cout<<std::endl;
+        std::cout<<"Iniciando geração "<<gen+1<<std::endl;
         vector<Individual> newPop;
         newPop.reserve(ga_params.popSize);
 
-        // --- ESTRATÉGIA DE SELEÇÃO 10% / 70% / 20% ---
-
-        // 1. (10%) Elitismo
-        std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b){
-            return a.fitness < b.fitness;
-        });
-        
+        // 1. Elitismo
         int num_elites = (int)(ga_params.popSize * 0.10);
         for(int i = 0; i < num_elites && i < pop.size(); ++i) {
             newPop.push_back(pop[i]);
         }
-
-        // 2. (70%) Geração de Filhos (Crossover e Mutação)
+        std::cout<<"Elitismo completo com "<<num_elites<<" indivíduos."<<std::endl;
+        // 2. Geração de Filhos
         int children_target_count = num_elites + (int)(ga_params.popSize * 0.70);
         int crossover_tries = 0; 
 
-        while (newPop.size() < children_target_count && crossover_tries < ga_params.crossover_max_tries) {
+        while (newPop.size() < children_target_count) {
+            std::cout<<"Gerando filhos: "<<newPop.size()+1<<" de "<<children_target_count<<std::endl;   
             Individual parent1 = tournamentSelect(pop, ga_params.tournamentK);
             Individual parent2 = tournamentSelect(pop, ga_params.tournamentK);
             
             std::pair<Individual, Individual> children;
-
             if (randreal() < ga_params.pCrossover) {
-                if (randreal() < 0.5) {
-                    children = one_point_crossover_customer(parent1, parent2, irp);
-                } else {
-                    children = two_point_crossover_customer(parent1, parent2, irp);
-                }
+                children = (randreal() < 0.5) ? 
+                           one_point_crossover_customer(parent1, parent2, irp) :
+                           two_point_crossover_customer(parent1, parent2, irp);
             } else {
                 children = {parent1, parent2};
             }
             
             // --- Processa o Filho 1 ---
-            crossover_tries++;
-            advance_portion_mutation(children.first, irp, ga_params.pMutation);
             
-            // <-- MUDANÇA: Chama a nova função para gerar rotas -->
-            generate_routes_for_individual(children.first, irp, aco_params);
-
-            // Agora a checagem de factibilidade pode comparar 'deliveries' e 'routes'
-            if (check_feasibility(children.first, irp)) {
-                evaluate_and_fill(children.first, irp, aco_params); // Apenas calcula custos
+            build_routes_for_individual(children.first, irp, aco_params);
+            check_feasibility(children.first, irp); 
+            
+            if (children.first.is_feasible) {
+                calculate_total_cost(children.first, irp); 
+                // <-- MUDANÇA: "Educa" o filho
+                if (randreal() < 0.2)busca_local(children.first, irp, aco_params, false);
                 newPop.push_back(children.first);
             }
-
+            else {
+                children.first.fitness = LARGE_COST;
+                busca_local(children.first, irp, aco_params, false);
+                newPop.push_back(children.first);
+            }
+            
             if (newPop.size() >= children_target_count) break;
 
-            // --- Processa o Filho 2 ---
-            crossover_tries++;
-            advance_portion_mutation(children.second, irp, ga_params.pMutation);
 
-            // <-- MUDANÇA: Chama a nova função para gerar rotas -->
-            generate_routes_for_individual(children.second, irp, aco_params);
+            build_routes_for_individual(children.second, irp, aco_params);
+            check_feasibility(children.second, irp);
             
-            if (check_feasibility(children.second, irp)) {
-                evaluate_and_fill(children.second, irp, aco_params); // Apenas calcula custos
+            if (children.second.is_feasible) {
+                calculate_total_cost(children.second, irp); 
+                // <-- MUDANÇA: "Educa" o filho
+                if (randreal() < 0.2)busca_local(children.second, irp, aco_params, false);
                 newPop.push_back(children.second);
             }
+            else {
+                children.second.fitness = LARGE_COST;
+                busca_local(children.second, irp, aco_params, false);
+                newPop.push_back(children.second);
         }
 
-        // 3. (20%) Geração de Imigrantes (Novos Aleatórios)
+        // 3. Geração de novas soluções
         while (newPop.size() < ga_params.popSize) {
-            Individual ind = make_new_heuristic_individual(irp, aco_params);
-            // Avalia o novo imigrante
-            evaluate_and_fill(ind, irp, aco_params);
+            Individual ind = make_new_heuristic_individual(irp);
+            build_routes_for_individual(ind, irp, aco_params);
+            check_feasibility(ind, irp);
+            
+            if (ind.is_feasible) {
+                calculate_total_cost(ind, irp);
+                if (randreal() < 0.2)busca_local(ind, irp, aco_params, false);
+            } else {
+                ind.fitness = LARGE_COST;
+                busca_local(ind, irp, aco_params, false);
+            }
             newPop.push_back(ind);
         }
         
         pop.swap(newPop);
 
-        Individual& genBest = *std::min_element(pop.begin(), pop.end(), 
-            [](const Individual& a, const Individual& b){ return a.fitness < b.fitness; });
-        if (genBest.fitness < bestOverall.fitness) {
-            bestOverall = genBest;
+        std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b){
+            return a.fitness < b.fitness;
+        });
+        
+        if (pop.front().fitness < bestOverall.fitness) {
+            bestOverall = pop.front();
         }
         
         // Log da Geração
-        double min_fit = (*std::min_element(pop.begin(), pop.end(), [](const auto& a, const auto& b){ return a.fitness < b.fitness; })).fitness;
-        double max_fit = (*std::max_element(pop.begin(), pop.end(), [](const auto& a, const auto& b){ return a.fitness < b.fitness; })).fitness;
-        double avg_fit = std::accumulate(pop.begin(), pop.end(), 0.0, [](double sum, const auto& ind){ return sum + ind.fitness; }) / pop.size();
+        double min_fit = pop.front().fitness;
+        double avg_fit = 0.0;
+        int feasible_count = 0;
+        for(const auto& ind : pop) {
+            if(ind.is_feasible) {
+                avg_fit += ind.fitness;
+                feasible_count++;
+            }
+        }
+        if (feasible_count > 0) avg_fit /= feasible_count;
         
-        std::cout << "Gen " << std::setw(4) << gen + 1 << "/" << ga_params.nGen
-                  << " | Melhor: " << std::fixed << std::setprecision(2) << min_fit
-                  << " | Média: " << avg_fit
-                  << " | Pior: " << max_fit
-                  << " | Global: " << bestOverall.fitness << "\n";
+        if (true) {
+            std::cout << "Gen " << std::setw(4) << gen + 1 << "/" << ga_params.nGen
+                      << " | Fact.: " << std::setw(3) << feasible_count << "/" << (int)pop.size()
+                      << " | Melhor: " << std::fixed << std::setprecision(2) << min_fit
+                      << " | Média(fact): " << avg_fit
+                      << " | Global: " << bestOverall.fitness << std::endl;
+                      
+        }
     }
+    
+}  
     return bestOverall;
 }
+
 
 
 
@@ -548,70 +415,18 @@ void printDeliveriesMatrix(const Individual& ind, const IRP& irp) {
     }
 }
 
-
-void generate_routes_for_individual(Individual& ind, const IRP& irp, const ACO_Params& aco_params) {
-    // Limpa/Redimensiona o vetor de rotas para garantir que está limpo
-    ind.routes_per_period.assign(irp.nPeriods, std::vector<Route>());
-
-    // Itera sobre cada período do plano de entregas
-    for (int t = 0; t < irp.nPeriods; ++t) {
-        long period_delivery_sum = std::accumulate(ind.deliveries[t].begin(), ind.deliveries[t].end(), 0L);
-        
-        if (period_delivery_sum > 0) {
-            // Chama o ACO para gerar as rotas para o plano de entrega do dia 't'
-            ACO_Result ares = runACO_for_period(irp, ind.deliveries[t], aco_params, false);
-            
-            // Armazena o resultado no indivíduo.
-            // A função 'check_feasibility' irá posteriormente validar
-            // se 'ares.bestRoutes' é de fato uma solução válida (sem custo LARGE
-            // e com todos os clientes atendidos).
-            ind.routes_per_period[t] = ares.bestRoutes;
-        }
-        // Se period_delivery_sum == 0, o vetor de rotas ind.routes_per_period[t]
-        // permanece vazio, o que é o correto.
-    }
-}
-
-
-void advance_portion_mutation(Individual& ind, const IRP& irp, double pMutation) {
-    // Percorre todos os clientes
-    for (int c = 0; c < irp.nCustomers; ++c) {
-        // Percorre os períodos a partir do segundo
-        for (int t_source = 1; t_source < irp.nPeriods; ++t_source) {
-            // Verifica a probabilidade de aplicar a mutação para este cliente/período
-            if (randreal() < pMutation) {
-                int q_available = ind.deliveries[t_source][c];
-                if (q_available <= 0) continue; // Pula se não houver entrega para mover
-
-                // Sorteia um período de destino anterior e uma quantidade
-                int t_dest = randint(0, t_source - 1);
-                int q_move = randint(1, q_available);
-
-                // Cria um indivíduo temporário para testar a factibilidade
-                Individual temp_ind = ind;
-                temp_ind.deliveries[t_source][c] -= q_move;
-                temp_ind.deliveries[t_dest][c] += q_move;
-
-                // Usa a função de checagem robusta que verifica o "pico de estoque"
-                if (check_feasibility(temp_ind, irp)) {
-                    ind = temp_ind; // Se for factível, aplica a mudança
-                }
-                // Se não for factível, a mudança é simplesmente descartada
-            }
-        }
-    }
-}
-
-void exportAndPlotRoutes(const IRP& irp, const Individual& best, const ACO_Params& acoParams,
-                         const std::string& dataFilename, const std::string& pyScript) {
+void exportAndPlotRoutes(
+    const IRP& irp,
+    const Individual& best,
+    const ACO_Params& acoParams,
+    const std::string& dataFilename,
+    const std::string& pyScript) 
+{
     std::ofstream out(dataFilename);
     if (!out.is_open()) return;
 
     int T = irp.nPeriods, nCust = irp.nCustomers, nVeh = irp.nVehicles;
-    
-    // Adiciona Capacidade ao cabeçalho
     out << T << " " << nCust << " " << nVeh << " " << irp.Capacity << "\n";
-    
     out << "DEPOT " << irp.depots[0].x << " " << irp.depots[0].y << "\n";
 
     vector<int> inv(nCust);
@@ -620,19 +435,14 @@ void exportAndPlotRoutes(const IRP& irp, const Individual& best, const ACO_Param
     for (int t = 0; t < T; ++t) {
         out << "PERIOD " << t << "\n";
         out << "CUSTOMERS\n";
-        
-        // <-- MUDANÇA: Pega o plano de entregas do indivíduo 'best' -->
         const vector<int>& del = best.deliveries[t];
-        
         for (int c = 0; c < nCust; ++c) {
             long inv_after = (long)inv[c] + (long)del[c] - (long)irp.customers[c].demand[t];
             out << (c+1) << " " << irp.customers[c].x << " " << irp.customers[c].y << " "
                 << inv[c] << " " << del[c] << " " << irp.customers[c].demand[t] << " " << inv_after << "\n";
         }
 
-        // As rotas já estão armazenadas no indivíduo 'best'
         out << "ROUTES\n";
-        // <-- MUDANÇA: Itera sobre a nova struct de Rota -->
         if (!best.routes_per_period[t].empty()) {
             for (const Route& route : best.routes_per_period[t]) {
                 for (size_t i = 0; i < route.visits.size(); ++i) {
@@ -653,3 +463,4 @@ void exportAndPlotRoutes(const IRP& irp, const Individual& best, const ACO_Param
     cmd << "python3 " << pyScript << " " << dataFilename << " > /dev/null 2>&1";
     std::system(cmd.str().c_str());
 }
+

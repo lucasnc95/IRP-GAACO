@@ -130,13 +130,13 @@ void IRP::readDataFromArchettiFile(const std::string& filename) {
     costMatrix.clear();
     
     int n_locations;
-    file >> n_locations >> this->nPeriods >> this->Capacity;
+    file >> n_locations >> this->nPeriods >> this->Capacity >> this->nVehicles;
     
     // <-- CORREÇÃO CRÍTICA: O número de clientes é o total de locais - 1 -->
     this->nCustomers = n_locations - 1;
     this->nDepots = 1;
-    this->nVehicles = 1; 
-    this->Fleet_Size = 1; 
+    //this->nVehicles = 1; 
+    this->Fleet_Size = nVehicles; 
     
     std::map<int, std::pair<double, double>> coords_map;
 
@@ -177,19 +177,28 @@ void IRP::readDataFromArchettiFile(const std::string& filename) {
         index_to_id_map[i+1] = customers[i].id;
     }
 
-    for (int i = 0; i < matrixSize; ++i) {
-        for (int j = 0; j < matrixSize; ++j) {
-            if (i == j) {
-                costMatrix[i][j] = 0;
-            } else {
-                int id_i = index_to_id_map[i];
-                int id_j = index_to_id_map[j];
-                
-                double dx = coords_map.at(id_i).first - coords_map.at(id_j).first;
-                double dy = coords_map.at(id_i).second - coords_map.at(id_j).second;
-                
-                costMatrix[i][j] = std::round(std::sqrt(dx*dx + dy*dy));
-            }
+for (int i = 0; i < matrixSize; ++i) {
+    for (int j = 0; j < matrixSize; ++j) {
+        if (i == j) {
+            costMatrix[i][j] = 0;
+        } else {
+            int id_i = index_to_id_map[i];
+            int id_j = index_to_id_map[j];
+            
+            double xi = coords_map.at(id_i).first;
+            double yi = coords_map.at(id_i).second;
+            double xj = coords_map.at(id_j).first;
+            double yj = coords_map.at(id_j).second;
+            
+            double dx = xi - xj;
+            double dy = yi - yj;
+
+            costMatrix[i][j] = static_cast<int>(std::sqrt(dx * dx + dy * dy) + 0.5);
         }
     }
 }
+
+}
+
+
+

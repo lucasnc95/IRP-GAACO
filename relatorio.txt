@@ -1,0 +1,665 @@
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls   s/call   s/call  name    
+ 53.66     88.25    88.25   104007     0.00     0.00  runACO_for_period(IRP const&, std::vector<int, std::allocator<int> > const&, ACO_Params const&, bool)
+ 12.85    109.38    21.13                             _init
+ 10.16    126.09    16.71 3679361085     0.00     0.00  void std::vector<int, std::allocator<int> >::_M_realloc_append<int const&>(int const&)
+  9.48    141.68    15.59 76458049     0.00     0.00  apply_2opt_on_route(Route&, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > const&, IRP const&, std::vector<int, std::allocator<int> > const&)
+  5.27    150.34     8.66 85279434     0.00     0.00  apply_inter_route_swap(std::vector<Route, std::allocator<Route> >&, IRP const&, std::vector<int, std::allocator<int> > const&, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > const&)
+  4.14    157.15     6.81 78209716     0.00     0.00  apply_inter_route_relocate(std::vector<Route, std::allocator<Route> >&, IRP const&, std::vector<int, std::allocator<int> > const&, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > const&)
+  2.55    161.34     4.19  6622733     0.00     0.00  std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>::_M_gen_rand()
+  1.14    163.21     1.87 799691362     0.00     0.00  void std::vector<int, std::allocator<int> >::_M_realloc_append<int>(int&&)
+  0.29    163.69     0.48 38997307     0.00     0.00  improve_routes(std::vector<Route, std::allocator<Route> >&, IRP const&, std::vector<int, std::allocator<int> > const&, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > const&, bool)
+  0.12    163.89     0.20  7153893     0.00     0.00  std::vector<double, std::allocator<double> >* std::__do_uninit_fill_n<std::vector<double, std::allocator<double> >*, unsigned long, std::vector<double, std::allocator<double> > >(std::vector<double, std::allocator<double> >*, unsigned long, std::vector<double, std::allocator<double> > const&)
+  0.04    163.96     0.07    24180     0.00     0.00  check_feasibility(Individual&, IRP const&)
+  0.04    164.02     0.06   176176     0.00     0.00  computePerfectInventory_Gurobi(Customer const&, Depot const&, std::vector<double, std::allocator<double> > const&, std::vector<GurobiPWLCurve, std::allocator<GurobiPWLCurve> > const&, int, double)
+  0.02    164.06     0.04       60     0.00     2.37  busca_local(Individual&, IRP const&, ACO_Params const&, bool)
+  0.02    164.09     0.03    24180     0.00     0.00  build_routes_for_individual(Individual&, IRP const&, ACO_Params const&)
+  0.01    164.11     0.02    47960     0.00     0.00  std::vector<double, std::allocator<double> >::_M_default_append(unsigned long)
+  0.01    164.13     0.02    23980     0.00     0.00  calculate_reinsertion_data(Individual const&, IRP const&, ACO_Params const&, int)
+  0.01    164.15     0.02                             GRBLinExpr::multAdd(double, GRBLinExpr const&)
+  0.01    164.17     0.02                             GRBQuadExpr::GRBQuadExpr(double)
+  0.01    164.19     0.02                             GRBModel::populate(bool)
+  0.01    164.21     0.02                             GRBVar::get(GRB_DoubleAttr) const
+  0.01    164.23     0.02                             GRBVar::getcolno() const
+  0.01    164.25     0.02                             void std::vector<double, std::allocator<double> >::_M_range_insert<__gnu_cxx::__normal_iterator<double const*, std::vector<double, std::allocator<double> > > >(__gnu_cxx::__normal_iterator<double*, std::vector<double, std::allocator<double> > >, __gnu_cxx::__normal_iterator<double const*, std::vector<double, std::allocator<double> > >, __gnu_cxx::__normal_iterator<double const*, std::vector<double, std::allocator<double> > >, std::forward_iterator_tag)
+  0.01    164.26     0.01   405934     0.00     0.00  frame_dummy
+  0.01    164.27     0.01   176109     0.00     0.00  Route* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<Route const*, std::vector<Route, std::allocator<Route> > >, Route*>(__gnu_cxx::__normal_iterator<Route const*, std::vector<Route, std::allocator<Route> > >, __gnu_cxx::__normal_iterator<Route const*, std::vector<Route, std::allocator<Route> > >, Route*)
+  0.01    164.28     0.01   169276     0.00     0.00  std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > >::_M_fill_assign(unsigned long, std::vector<long, std::allocator<long> > const&)
+  0.01    164.29     0.01   149315     0.00     0.00  void std::vector<double, std::allocator<double> >::_M_realloc_append<double const&>(double const&)
+  0.01    164.30     0.01    80243     0.00     0.00  find_best_insertion(Route const&, int, IRP const&)
+  0.01    164.31     0.01    48192     0.00     0.00  calculate_total_cost(Individual&, IRP const&)
+  0.01    164.32     0.01                             GRBLinExpr::GRBLinExpr(GRBLinExpr const&)
+  0.01    164.33     0.01                             GRBLinExpr::operator=(GRBLinExpr const&)
+  0.01    164.34     0.01                             GRBModel::setObjective(GRBLinExpr, int)
+  0.01    164.35     0.01                             GRBModel::setObjective(GRBQuadExpr, int)
+  0.01    164.36     0.01                             GRBModel::set(GRB_DoubleParam, double)
+  0.01    164.37     0.01                             GRBModel::addVar(double, double, double, char, char const*)
+  0.01    164.38     0.01                             GRBModel::optimize()
+  0.01    164.39     0.01                             GRBModel::addConstr(GRBLinExpr const&, char, double, char const*)
+  0.01    164.40     0.01                             GRBModel::addConstr(GRBLinExpr const&, char, double, double, char const*)
+  0.01    164.41     0.01                             GRBModel::addConstr(GRBTempConstr const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)
+  0.01    164.42     0.01                             GRBConstr::GRBConstr(_GRBmodel*, int)
+  0.01    164.43     0.01                             void std::vector<GRBVar, std::allocator<GRBVar> >::_M_range_insert<__gnu_cxx::__normal_iterator<GRBVar const*, std::vector<GRBVar, std::allocator<GRBVar> > > >(__gnu_cxx::__normal_iterator<GRBVar*, std::vector<GRBVar, std::allocator<GRBVar> > >, __gnu_cxx::__normal_iterator<GRBVar const*, std::vector<GRBVar, std::allocator<GRBVar> > >, __gnu_cxx::__normal_iterator<GRBVar const*, std::vector<GRBVar, std::allocator<GRBVar> > >, std::forward_iterator_tag)
+  0.01    164.44     0.01                             void std::vector<GRBVar, std::allocator<GRBVar> >::_M_realloc_insert<GRBVar const&>(__gnu_cxx::__normal_iterator<GRBVar*, std::vector<GRBVar, std::allocator<GRBVar> > >, GRBVar const&)
+  0.01    164.45     0.01                             void std::vector<GRBConstr, std::allocator<GRBConstr> >::emplace_back<GRBConstr>(GRBConstr&&)
+  0.01    164.46     0.01                             std::vector<double, std::allocator<double> >::operator=(std::vector<double, std::allocator<double> > const&)
+  0.00    164.46     0.00   293195     0.00     0.00  void std::vector<double, std::allocator<double> >::_M_realloc_append<double>(double&&)
+  0.00    164.46     0.00   192362     0.00     0.00  std::vector<int, std::allocator<int> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*>(__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, __gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*)
+  0.00    164.46     0.00   145083     0.00     0.00  two_point_crossover_customer(Individual const&, Individual const&, IRP const&)
+  0.00    164.46     0.00   143879     0.00     0.00  void std::vector<InsertionOption, std::allocator<InsertionOption> >::_M_realloc_append<InsertionOption>(InsertionOption&&)
+  0.00    164.46     0.00    96181     0.00     0.00  std::vector<Route, std::allocator<Route> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, std::vector<Route, std::allocator<Route> >*>(__gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, __gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, std::vector<Route, std::allocator<Route> >*)
+  0.00    164.46     0.00    96181     0.00     0.00  std::vector<long, std::allocator<long> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, std::vector<long, std::allocator<long> >*>(__gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, __gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, std::vector<long, std::allocator<long> >*)
+  0.00    164.46     0.00    48392     0.00     0.00  std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >::_M_fill_assign(unsigned long, std::vector<int, std::allocator<int> > const&)
+  0.00    164.46     0.00    48156     0.00     0.00  std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > >::_M_default_append(unsigned long)
+  0.00    164.46     0.00    24180     0.00     0.00  std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > >::_M_fill_assign(unsigned long, std::vector<Route, std::allocator<Route> > const&)
+  0.00    164.46     0.00    23980     0.00     0.00  std::vector<GurobiPWLCurve, std::allocator<GurobiPWLCurve> >::_M_default_append(unsigned long)
+  0.00    164.46     0.00    23980     0.00     0.00  std::vector<long, std::allocator<long> >::_M_fill_insert(__gnu_cxx::__normal_iterator<long*, std::vector<long, std::allocator<long> > >, unsigned long, long const&)
+  0.00    164.46     0.00    11986     0.00     0.00  exportAndPlotRoutes(IRP const&, Individual const&, ACO_Params const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+  0.00    164.46     0.00      720     0.00     0.00  void std::_Destroy_aux<false>::__destroy<std::vector<long, std::allocator<long> >*>(std::vector<long, std::allocator<long> >*, std::vector<long, std::allocator<long> >*)
+  0.00    164.46     0.00      392     0.00     0.00  std::vector<int, std::allocator<int> >* std::__do_uninit_fill_n<std::vector<int, std::allocator<int> >*, unsigned long, std::vector<int, std::allocator<int> > >(std::vector<int, std::allocator<int> >*, unsigned long, std::vector<int, std::allocator<int> > const&)
+  0.00    164.46     0.00      305     0.00     0.00  Individual::~Individual()
+  0.00    164.46     0.00      208     0.00     0.00  Individual::Individual(int, int)
+  0.00    164.46     0.00      196     0.00     0.00  std::vector<long, std::allocator<long> >* std::__do_uninit_fill_n<std::vector<long, std::allocator<long> >*, unsigned long, std::vector<long, std::allocator<long> > >(std::vector<long, std::allocator<long> >*, unsigned long, std::vector<long, std::allocator<long> > const&)
+  0.00    164.46     0.00      180     0.00     0.00  make_new_heuristic_individual(IRP const&)
+  0.00    164.46     0.00       61     0.00     0.00  Individual::Individual(Individual const&)
+  0.00    164.46     0.00       60     0.00     0.00  void std::shuffle<__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&>(__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, __gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&)
+  0.00    164.46     0.00       39     0.00     0.00  std::enable_if<std::__and_<std::__not_<std::__is_tuple_like<Individual> >, std::is_move_constructible<Individual>, std::is_move_assignable<Individual> >::value, void>::type std::swap<Individual>(Individual&, Individual&)
+  0.00    164.46     0.00       28     0.00     0.00  trim(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+  0.00    164.46     0.00       26     0.00     0.00  std::vector<int, std::allocator<int> >::_M_fill_assign(unsigned long, int const&)
+  0.00    164.46     0.00       11     0.00     0.00  std::vector<Individual, std::allocator<Individual> >::reserve(unsigned long)
+  0.00    164.46     0.00       10     0.00     0.00  void std::__introsort_loop<__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#2}> >(__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, __gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#2}>)
+  0.00    164.46     0.00        6     0.00     0.00  void std::vector<Customer, std::allocator<Customer> >::_M_realloc_append<Customer const&>(Customer const&)
+  0.00    164.46     0.00        5     0.00     0.00  one_point_crossover_customer(Individual const&, Individual const&, IRP const&)
+  0.00    164.46     0.00        5     0.00     0.00  std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string<std::allocator<char> >(char const*, std::allocator<char> const&)
+  0.00    164.46     0.00        1     0.00     0.00  printDeliveriesMatrix(Individual const&, IRP const&)
+  0.00    164.46     0.00        1     0.00   143.06  run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)
+  0.00    164.46     0.00        1     0.00     0.00  load_parameters_from_file(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, GA_Params&, ACO_Params&)
+  0.00    164.46     0.00        1     0.00     0.00  IRP::readDataFromArchettiFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+  0.00    164.46     0.00        1     0.00     0.00  IRP::~IRP()
+  0.00    164.46     0.00        1     0.00     0.00  IRP::printData() const
+  0.00    164.46     0.00        1     0.00     0.00  void std::vector<Depot, std::allocator<Depot> >::_M_realloc_append<Depot const&>(Depot const&)
+  0.00    164.46     0.00        1     0.00     0.00  std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > >::_M_fill_insert(__gnu_cxx::__normal_iterator<std::vector<double, std::allocator<double> >*, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > >, unsigned long, std::vector<double, std::allocator<double> > const&)
+  0.00    164.46     0.00        1     0.00     0.00  void std::__introsort_loop<__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#1}> >(__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, __gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#1}>)
+  0.00    164.46     0.00        1     0.00     0.00  bool std::operator==<char, std::char_traits<char>, std::allocator<char> >(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, char const*)
+
+ %         the percentage of the total running time of the
+time       program used by this function.
+
+cumulative a running sum of the number of seconds accounted
+ seconds   for by this function and those listed above it.
+
+ self      the number of seconds accounted for by this
+seconds    function alone.  This is the major sort for this
+           listing.
+
+calls      the number of times this function was invoked, if
+           this function is profiled, else blank.
+
+ self      the average number of milliseconds spent in this
+ms/call    function per call, if this function is profiled,
+	   else blank.
+
+ total     the average number of milliseconds spent in this
+ms/call    function and its descendents per call, if this
+	   function is profiled, else blank.
+
+name       the name of the function.  This is the minor sort
+           for this listing. The index shows the location of
+	   the function in the gprof listing. If the index is
+	   in parenthesis it shows where it would appear in
+	   the gprof listing if it were to be printed.
+
+Copyright (C) 2012-2024 Free Software Foundation, Inc.
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.
+
+		     Call graph (explanation follows)
+
+
+granularity: each sample hit covers 4 byte(s) for 0.01% of 164.46 seconds
+
+index % time    self  children    called     name
+                                                 <spontaneous>
+[1]     87.0    0.00  143.06                 main [1]
+                0.00  143.06       1/1           run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool) [2]
+                0.00    0.00       1/1           IRP::readDataFromArchettiFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) [52]
+                0.00    0.00       1/11986       exportAndPlotRoutes(IRP const&, Individual const&, ACO_Params const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) [49]
+                0.00    0.00       5/5           std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string<std::allocator<char> >(char const*, std::allocator<char> const&) [80]
+                0.00    0.00       1/1           load_parameters_from_file(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, GA_Params&, ACO_Params&) [82]
+                0.00    0.00       1/1           bool std::operator==<char, std::char_traits<char>, std::allocator<char> >(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, char const*) [87]
+                0.00    0.00       1/1           IRP::printData() const [84]
+                0.00    0.00       1/1           printDeliveriesMatrix(Individual const&, IRP const&) [81]
+                0.00    0.00       1/305         Individual::~Individual() [70]
+                0.00    0.00       1/1           IRP::~IRP() [83]
+-----------------------------------------------
+                0.00  143.06       1/1           main [1]
+[2]     87.0    0.00  143.06       1         run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool) [2]
+                0.04  142.20      60/60          busca_local(Individual&, IRP const&, ACO_Params const&, bool) [4]
+                0.00    0.82     200/24180       build_routes_for_individual(Individual&, IRP const&, ACO_Params const&) [5]
+                0.00    0.00     200/24180       check_feasibility(Individual&, IRP const&) [17]
+                0.00    0.00     180/180         make_new_heuristic_individual(IRP const&) [46]
+                0.00    0.00     234/48192       calculate_total_cost(Individual&, IRP const&) [30]
+                0.00    0.00      20/208         Individual::Individual(int, int) [50]
+                0.00    0.00       5/5           one_point_crossover_customer(Individual const&, Individual const&, IRP const&) [51]
+                0.00    0.00      60/11986       exportAndPlotRoutes(IRP const&, Individual const&, ACO_Params const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) [49]
+                0.00    0.00       3/145083      two_point_crossover_customer(Individual const&, Individual const&, IRP const&) [47]
+                0.00    0.00     368/192362      std::vector<int, std::allocator<int> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*>(__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, __gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*) [60]
+                0.00    0.00     304/305         Individual::~Individual() [70]
+                0.00    0.00     184/96181       std::vector<Route, std::allocator<Route> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, std::vector<Route, std::allocator<Route> >*>(__gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, __gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, std::vector<Route, std::allocator<Route> >*) [62]
+                0.00    0.00     184/96181       std::vector<long, std::allocator<long> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, std::vector<long, std::allocator<long> >*>(__gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, __gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, std::vector<long, std::allocator<long> >*) [63]
+                0.00    0.00      61/61          Individual::Individual(Individual const&) [72]
+                0.00    0.00      11/11          std::vector<Individual, std::allocator<Individual> >::reserve(unsigned long) [77]
+                0.00    0.00      10/10          void std::__introsort_loop<__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#2}> >(__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, __gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#2}>) [78]
+                0.00    0.00       1/1           void std::__introsort_loop<__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#1}> >(__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, __gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#1}>) [86]
+-----------------------------------------------
+               26.70   16.49   31467/104007      calculate_reinsertion_data(Individual const&, IRP const&, ACO_Params const&, int) [6]
+               61.55   38.01   72540/104007      build_routes_for_individual(Individual&, IRP const&, ACO_Params const&) [5]
+[3]     86.8   88.25   54.50  104007         runACO_for_period(IRP const&, std::vector<int, std::allocator<int> > const&, ACO_Params const&, bool) [3]
+                0.48   31.06 38997307/38997307     improve_routes(std::vector<Route, std::allocator<Route> >&, IRP const&, std::vector<int, std::allocator<int> > const&, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > const&, bool) [7]
+               16.71    0.00 3679356695/3679361085     void std::vector<int, std::allocator<int> >::_M_realloc_append<int const&>(int const&) [9]
+                4.19    0.00 6622687/6622733     std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>::_M_gen_rand() [13]
+                1.87    0.00 799691362/799691362     void std::vector<int, std::allocator<int> >::_M_realloc_append<int>(int&&) [14]
+                0.18    0.00 6552441/7153893     std::vector<double, std::allocator<double> >* std::__do_uninit_fill_n<std::vector<double, std::allocator<double> >*, unsigned long, std::vector<double, std::allocator<double> > >(std::vector<double, std::allocator<double> >*, unsigned long, std::vector<double, std::allocator<double> > const&) [15]
+                0.01    0.00  405934/405934      frame_dummy [25]
+-----------------------------------------------
+                0.04  142.20      60/60          run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool) [2]
+[4]     86.5    0.04  142.20      60         busca_local(Individual&, IRP const&, ACO_Params const&, bool) [4]
+                0.03   98.74   23980/24180       build_routes_for_individual(Individual&, IRP const&, ACO_Params const&) [5]
+                0.02   43.30   23980/23980       calculate_reinsertion_data(Individual const&, IRP const&, ACO_Params const&, int) [6]
+                0.07    0.01   23980/24180       check_feasibility(Individual&, IRP const&) [17]
+                0.01    0.01   32296/176176      computePerfectInventory_Gurobi(Customer const&, Depot const&, std::vector<double, std::allocator<double> > const&, std::vector<GurobiPWLCurve, std::allocator<GurobiPWLCurve> > const&, int, double) [16]
+                0.00    0.00   23978/48192       calculate_total_cost(Individual&, IRP const&) [30]
+                0.00    0.00   47960/192362      std::vector<int, std::allocator<int> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*>(__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, __gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*) [60]
+                0.00    0.00   23980/96181       std::vector<Route, std::allocator<Route> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, std::vector<Route, std::allocator<Route> >*>(__gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, __gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, std::vector<Route, std::allocator<Route> >*) [62]
+                0.00    0.00   23980/96181       std::vector<long, std::allocator<long> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, std::vector<long, std::allocator<long> >*>(__gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, __gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, std::vector<long, std::allocator<long> >*) [63]
+                0.00    0.00      60/60          void std::shuffle<__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&>(__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, __gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&) [73]
+-----------------------------------------------
+                0.00    0.82     200/24180       run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool) [2]
+                0.03   98.74   23980/24180       busca_local(Individual&, IRP const&, ACO_Params const&, bool) [4]
+[5]     60.6    0.03   99.56   24180         build_routes_for_individual(Individual&, IRP const&, ACO_Params const&) [5]
+               61.55   38.01   72540/104007      runACO_for_period(IRP const&, std::vector<int, std::allocator<int> > const&, ACO_Params const&, bool) [3]
+                0.00    0.00   72540/145083      two_point_crossover_customer(Individual const&, Individual const&, IRP const&) [47]
+                0.00    0.00   24180/24180       std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > >::_M_fill_assign(unsigned long, std::vector<Route, std::allocator<Route> > const&) [48]
+-----------------------------------------------
+                0.02   43.30   23980/23980       busca_local(Individual&, IRP const&, ACO_Params const&, bool) [4]
+[6]     26.3    0.02   43.30   23980         calculate_reinsertion_data(Individual const&, IRP const&, ACO_Params const&, int) [6]
+               26.70   16.49   31467/104007      runACO_for_period(IRP const&, std::vector<int, std::allocator<int> > const&, ACO_Params const&, bool) [3]
+                0.05    0.03  143880/176176      computePerfectInventory_Gurobi(Customer const&, Depot const&, std::vector<double, std::allocator<double> > const&, std::vector<GurobiPWLCurve, std::allocator<GurobiPWLCurve> > const&, int, double) [16]
+                0.01    0.00  149315/149315      void std::vector<double, std::allocator<double> >::_M_realloc_append<double const&>(double const&) [28]
+                0.01    0.00   80243/80243       find_best_insertion(Route const&, int, IRP const&) [29]
+                0.00    0.00   23980/48192       calculate_total_cost(Individual&, IRP const&) [30]
+                0.00    0.00  143880/7153893     std::vector<double, std::allocator<double> >* std::__do_uninit_fill_n<std::vector<double, std::allocator<double> >*, unsigned long, std::vector<double, std::allocator<double> > >(std::vector<double, std::allocator<double> >*, unsigned long, std::vector<double, std::allocator<double> > const&) [15]
+                0.00    0.00   31467/176109      Route* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<Route const*, std::vector<Route, std::allocator<Route> > >, Route*>(__gnu_cxx::__normal_iterator<Route const*, std::vector<Route, std::allocator<Route> > >, __gnu_cxx::__normal_iterator<Route const*, std::vector<Route, std::allocator<Route> > >, Route*) [26]
+                0.00    0.00   23980/169276      std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > >::_M_fill_assign(unsigned long, std::vector<long, std::allocator<long> > const&) [27]
+                0.00    0.00  293195/293195      void std::vector<double, std::allocator<double> >::_M_realloc_append<double>(double&&) [59]
+                0.00    0.00  143879/143879      void std::vector<InsertionOption, std::allocator<InsertionOption> >::_M_realloc_append<InsertionOption>(InsertionOption&&) [61]
+                0.00    0.00   95920/192362      std::vector<int, std::allocator<int> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*>(__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, __gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*) [60]
+                0.00    0.00   47960/48392       std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >::_M_fill_assign(unsigned long, std::vector<int, std::allocator<int> > const&) [64]
+                0.00    0.00   47960/96181       std::vector<Route, std::allocator<Route> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, std::vector<Route, std::allocator<Route> >*>(__gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, __gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, std::vector<Route, std::allocator<Route> >*) [62]
+                0.00    0.00   47960/96181       std::vector<long, std::allocator<long> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, std::vector<long, std::allocator<long> >*>(__gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, __gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, std::vector<long, std::allocator<long> >*) [63]
+                0.00    0.00   47960/48156       std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > >::_M_default_append(unsigned long) [65]
+                0.00    0.00   23980/23980       std::vector<long, std::allocator<long> >::_M_fill_insert(__gnu_cxx::__normal_iterator<long*, std::vector<long, std::allocator<long> > >, unsigned long, long const&) [67]
+                0.00    0.00   23980/23980       std::vector<GurobiPWLCurve, std::allocator<GurobiPWLCurve> >::_M_default_append(unsigned long) [66]
+-----------------------------------------------
+                0.48   31.06 38997307/38997307     runACO_for_period(IRP const&, std::vector<int, std::allocator<int> > const&, ACO_Params const&, bool) [3]
+[7]     19.2    0.48   31.06 38997307         improve_routes(std::vector<Route, std::allocator<Route> >&, IRP const&, std::vector<int, std::allocator<int> > const&, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > const&, bool) [7]
+               15.59    0.00 76458049/76458049     apply_2opt_on_route(Route&, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > const&, IRP const&, std::vector<int, std::allocator<int> > const&) [10]
+                8.66    0.00 85279434/85279434     apply_inter_route_swap(std::vector<Route, std::allocator<Route> >&, IRP const&, std::vector<int, std::allocator<int> > const&, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > const&) [11]
+                6.81    0.00 78209716/78209716     apply_inter_route_relocate(std::vector<Route, std::allocator<Route> >&, IRP const&, std::vector<int, std::allocator<int> > const&, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > const&) [12]
+-----------------------------------------------
+                                                 <spontaneous>
+[8]     12.8   21.13    0.00                 _init [8]
+-----------------------------------------------
+                0.00    0.00    4390/3679361085     make_new_heuristic_individual(IRP const&) [46]
+               16.71    0.00 3679356695/3679361085     runACO_for_period(IRP const&, std::vector<int, std::allocator<int> > const&, ACO_Params const&, bool) [3]
+[9]     10.2   16.71    0.00 3679361085         void std::vector<int, std::allocator<int> >::_M_realloc_append<int const&>(int const&) [9]
+-----------------------------------------------
+               15.59    0.00 76458049/76458049     improve_routes(std::vector<Route, std::allocator<Route> >&, IRP const&, std::vector<int, std::allocator<int> > const&, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > const&, bool) [7]
+[10]     9.5   15.59    0.00 76458049         apply_2opt_on_route(Route&, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > const&, IRP const&, std::vector<int, std::allocator<int> > const&) [10]
+-----------------------------------------------
+                8.66    0.00 85279434/85279434     improve_routes(std::vector<Route, std::allocator<Route> >&, IRP const&, std::vector<int, std::allocator<int> > const&, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > const&, bool) [7]
+[11]     5.3    8.66    0.00 85279434         apply_inter_route_swap(std::vector<Route, std::allocator<Route> >&, IRP const&, std::vector<int, std::allocator<int> > const&, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > const&) [11]
+-----------------------------------------------
+                6.81    0.00 78209716/78209716     improve_routes(std::vector<Route, std::allocator<Route> >&, IRP const&, std::vector<int, std::allocator<int> > const&, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > const&, bool) [7]
+[12]     4.1    6.81    0.00 78209716         apply_inter_route_relocate(std::vector<Route, std::allocator<Route> >&, IRP const&, std::vector<int, std::allocator<int> > const&, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > const&) [12]
+-----------------------------------------------
+                0.00    0.00      15/6622733     make_new_heuristic_individual(IRP const&) [46]
+                0.00    0.00      31/6622733     exportAndPlotRoutes(IRP const&, Individual const&, ACO_Params const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) [49]
+                4.19    0.00 6622687/6622733     runACO_for_period(IRP const&, std::vector<int, std::allocator<int> > const&, ACO_Params const&, bool) [3]
+[13]     2.5    4.19    0.00 6622733         std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>::_M_gen_rand() [13]
+-----------------------------------------------
+                1.87    0.00 799691362/799691362     runACO_for_period(IRP const&, std::vector<int, std::allocator<int> > const&, ACO_Params const&, bool) [3]
+[14]     1.1    1.87    0.00 799691362         void std::vector<int, std::allocator<int> >::_M_realloc_append<int>(int&&) [14]
+-----------------------------------------------
+                0.00    0.00       1/7153893     std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > >::_M_fill_insert(__gnu_cxx::__normal_iterator<std::vector<double, std::allocator<double> >*, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > >, unsigned long, std::vector<double, std::allocator<double> > const&) [53]
+                0.00    0.00  143880/7153893     calculate_reinsertion_data(Individual const&, IRP const&, ACO_Params const&, int) [6]
+                0.01    0.00  457571/7153893     computePerfectInventory_Gurobi(Customer const&, Depot const&, std::vector<double, std::allocator<double> > const&, std::vector<GurobiPWLCurve, std::allocator<GurobiPWLCurve> > const&, int, double) [16]
+                0.18    0.00 6552441/7153893     runACO_for_period(IRP const&, std::vector<int, std::allocator<int> > const&, ACO_Params const&, bool) [3]
+[15]     0.1    0.20    0.00 7153893         std::vector<double, std::allocator<double> >* std::__do_uninit_fill_n<std::vector<double, std::allocator<double> >*, unsigned long, std::vector<double, std::allocator<double> > >(std::vector<double, std::allocator<double> >*, unsigned long, std::vector<double, std::allocator<double> > const&) [15]
+-----------------------------------------------
+                              150117             computePerfectInventory_Gurobi(Customer const&, Depot const&, std::vector<double, std::allocator<double> > const&, std::vector<GurobiPWLCurve, std::allocator<GurobiPWLCurve> > const&, int, double) [16]
+                0.01    0.01   32296/176176      busca_local(Individual&, IRP const&, ACO_Params const&, bool) [4]
+                0.05    0.03  143880/176176      calculate_reinsertion_data(Individual const&, IRP const&, ACO_Params const&, int) [6]
+[16]     0.1    0.06    0.04  176176+150117  computePerfectInventory_Gurobi(Customer const&, Depot const&, std::vector<double, std::allocator<double> > const&, std::vector<GurobiPWLCurve, std::allocator<GurobiPWLCurve> > const&, int, double) [16]
+                0.02    0.00   47960/47960       std::vector<double, std::allocator<double> >::_M_default_append(unsigned long) [18]
+                0.01    0.00  457571/7153893     std::vector<double, std::allocator<double> >* std::__do_uninit_fill_n<std::vector<double, std::allocator<double> >*, unsigned long, std::vector<double, std::allocator<double> > >(std::vector<double, std::allocator<double> >*, unsigned long, std::vector<double, std::allocator<double> > const&) [15]
+                0.01    0.00  143879/176109      Route* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<Route const*, std::vector<Route, std::allocator<Route> > >, Route*>(__gnu_cxx::__normal_iterator<Route const*, std::vector<Route, std::allocator<Route> > >, __gnu_cxx::__normal_iterator<Route const*, std::vector<Route, std::allocator<Route> > >, Route*) [26]
+                0.00    0.00   47960/192362      std::vector<int, std::allocator<int> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*>(__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, __gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*) [60]
+                0.00    0.00   23980/96181       std::vector<long, std::allocator<long> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, std::vector<long, std::allocator<long> >*>(__gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, __gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, std::vector<long, std::allocator<long> >*) [63]
+                0.00    0.00   23980/96181       std::vector<Route, std::allocator<Route> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, std::vector<Route, std::allocator<Route> >*>(__gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, __gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, std::vector<Route, std::allocator<Route> >*) [62]
+                              150117             computePerfectInventory_Gurobi(Customer const&, Depot const&, std::vector<double, std::allocator<double> > const&, std::vector<GurobiPWLCurve, std::allocator<GurobiPWLCurve> > const&, int, double) [16]
+-----------------------------------------------
+                0.00    0.00     200/24180       run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool) [2]
+                0.07    0.01   23980/24180       busca_local(Individual&, IRP const&, ACO_Params const&, bool) [4]
+[17]     0.0    0.07    0.01   24180         check_feasibility(Individual&, IRP const&) [17]
+                0.01    0.00  145080/169276      std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > >::_M_fill_assign(unsigned long, std::vector<long, std::allocator<long> > const&) [27]
+-----------------------------------------------
+                0.02    0.00   47960/47960       computePerfectInventory_Gurobi(Customer const&, Depot const&, std::vector<double, std::allocator<double> > const&, std::vector<GurobiPWLCurve, std::allocator<GurobiPWLCurve> > const&, int, double) [16]
+[18]     0.0    0.02    0.00   47960         std::vector<double, std::allocator<double> >::_M_default_append(unsigned long) [18]
+-----------------------------------------------
+                                                 <spontaneous>
+[19]     0.0    0.02    0.00                 GRBLinExpr::multAdd(double, GRBLinExpr const&) [19]
+-----------------------------------------------
+                                                 <spontaneous>
+[20]     0.0    0.02    0.00                 GRBQuadExpr::GRBQuadExpr(double) [20]
+-----------------------------------------------
+                                                 <spontaneous>
+[21]     0.0    0.02    0.00                 GRBModel::populate(bool) [21]
+-----------------------------------------------
+                                                 <spontaneous>
+[22]     0.0    0.02    0.00                 GRBVar::get(GRB_DoubleAttr) const [22]
+-----------------------------------------------
+                                                 <spontaneous>
+[23]     0.0    0.02    0.00                 GRBVar::getcolno() const [23]
+-----------------------------------------------
+                                                 <spontaneous>
+[24]     0.0    0.02    0.00                 void std::vector<double, std::allocator<double> >::_M_range_insert<__gnu_cxx::__normal_iterator<double const*, std::vector<double, std::allocator<double> > > >(__gnu_cxx::__normal_iterator<double*, std::vector<double, std::allocator<double> > >, __gnu_cxx::__normal_iterator<double const*, std::vector<double, std::allocator<double> > >, __gnu_cxx::__normal_iterator<double const*, std::vector<double, std::allocator<double> > >, std::forward_iterator_tag) [24]
+-----------------------------------------------
+                              246231             frame_dummy [25]
+                0.01    0.00  405934/405934      runACO_for_period(IRP const&, std::vector<int, std::allocator<int> > const&, ACO_Params const&, bool) [3]
+[25]     0.0    0.01    0.00  405934+246231  frame_dummy [25]
+                              246231             frame_dummy [25]
+-----------------------------------------------
+                0.00    0.00     763/176109      two_point_crossover_customer(Individual const&, Individual const&, IRP const&) [47]
+                0.00    0.00   31467/176109      calculate_reinsertion_data(Individual const&, IRP const&, ACO_Params const&, int) [6]
+                0.01    0.00  143879/176109      computePerfectInventory_Gurobi(Customer const&, Depot const&, std::vector<double, std::allocator<double> > const&, std::vector<GurobiPWLCurve, std::allocator<GurobiPWLCurve> > const&, int, double) [16]
+[26]     0.0    0.01    0.00  176109         Route* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<Route const*, std::vector<Route, std::allocator<Route> > >, Route*>(__gnu_cxx::__normal_iterator<Route const*, std::vector<Route, std::allocator<Route> > >, __gnu_cxx::__normal_iterator<Route const*, std::vector<Route, std::allocator<Route> > >, Route*) [26]
+-----------------------------------------------
+                0.00    0.00       3/169276      two_point_crossover_customer(Individual const&, Individual const&, IRP const&) [47]
+                0.00    0.00       5/169276      one_point_crossover_customer(Individual const&, Individual const&, IRP const&) [51]
+                0.00    0.00     208/169276      Individual::Individual(int, int) [50]
+                0.00    0.00   23980/169276      calculate_reinsertion_data(Individual const&, IRP const&, ACO_Params const&, int) [6]
+                0.01    0.00  145080/169276      check_feasibility(Individual&, IRP const&) [17]
+[27]     0.0    0.01    0.00  169276         std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > >::_M_fill_assign(unsigned long, std::vector<long, std::allocator<long> > const&) [27]
+                0.00    0.00     196/196         std::vector<long, std::allocator<long> >* std::__do_uninit_fill_n<std::vector<long, std::allocator<long> >*, unsigned long, std::vector<long, std::allocator<long> > >(std::vector<long, std::allocator<long> >*, unsigned long, std::vector<long, std::allocator<long> > const&) [71]
+-----------------------------------------------
+                0.01    0.00  149315/149315      calculate_reinsertion_data(Individual const&, IRP const&, ACO_Params const&, int) [6]
+[28]     0.0    0.01    0.00  149315         void std::vector<double, std::allocator<double> >::_M_realloc_append<double const&>(double const&) [28]
+-----------------------------------------------
+                0.01    0.00   80243/80243       calculate_reinsertion_data(Individual const&, IRP const&, ACO_Params const&, int) [6]
+[29]     0.0    0.01    0.00   80243         find_best_insertion(Route const&, int, IRP const&) [29]
+-----------------------------------------------
+                0.00    0.00     234/48192       run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool) [2]
+                0.00    0.00   23978/48192       busca_local(Individual&, IRP const&, ACO_Params const&, bool) [4]
+                0.00    0.00   23980/48192       calculate_reinsertion_data(Individual const&, IRP const&, ACO_Params const&, int) [6]
+[30]     0.0    0.01    0.00   48192         calculate_total_cost(Individual&, IRP const&) [30]
+-----------------------------------------------
+                                                 <spontaneous>
+[31]     0.0    0.01    0.00                 GRBLinExpr::GRBLinExpr(GRBLinExpr const&) [31]
+-----------------------------------------------
+                                                 <spontaneous>
+[32]     0.0    0.01    0.00                 GRBLinExpr::operator=(GRBLinExpr const&) [32]
+-----------------------------------------------
+                                                 <spontaneous>
+[33]     0.0    0.01    0.00                 GRBModel::setObjective(GRBLinExpr, int) [33]
+-----------------------------------------------
+                                                 <spontaneous>
+[34]     0.0    0.01    0.00                 GRBModel::setObjective(GRBQuadExpr, int) [34]
+-----------------------------------------------
+                                                 <spontaneous>
+[35]     0.0    0.01    0.00                 GRBModel::set(GRB_DoubleParam, double) [35]
+-----------------------------------------------
+                                                 <spontaneous>
+[36]     0.0    0.01    0.00                 GRBModel::addVar(double, double, double, char, char const*) [36]
+-----------------------------------------------
+                                                 <spontaneous>
+[37]     0.0    0.01    0.00                 GRBModel::optimize() [37]
+-----------------------------------------------
+                                                 <spontaneous>
+[38]     0.0    0.01    0.00                 GRBModel::addConstr(GRBLinExpr const&, char, double, char const*) [38]
+-----------------------------------------------
+                                                 <spontaneous>
+[39]     0.0    0.01    0.00                 GRBModel::addConstr(GRBLinExpr const&, char, double, double, char const*) [39]
+-----------------------------------------------
+                                                 <spontaneous>
+[40]     0.0    0.01    0.00                 GRBModel::addConstr(GRBTempConstr const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) [40]
+-----------------------------------------------
+                                                 <spontaneous>
+[41]     0.0    0.01    0.00                 GRBConstr::GRBConstr(_GRBmodel*, int) [41]
+-----------------------------------------------
+                                                 <spontaneous>
+[42]     0.0    0.01    0.00                 void std::vector<GRBVar, std::allocator<GRBVar> >::_M_range_insert<__gnu_cxx::__normal_iterator<GRBVar const*, std::vector<GRBVar, std::allocator<GRBVar> > > >(__gnu_cxx::__normal_iterator<GRBVar*, std::vector<GRBVar, std::allocator<GRBVar> > >, __gnu_cxx::__normal_iterator<GRBVar const*, std::vector<GRBVar, std::allocator<GRBVar> > >, __gnu_cxx::__normal_iterator<GRBVar const*, std::vector<GRBVar, std::allocator<GRBVar> > >, std::forward_iterator_tag) [42]
+-----------------------------------------------
+                                                 <spontaneous>
+[43]     0.0    0.01    0.00                 void std::vector<GRBVar, std::allocator<GRBVar> >::_M_realloc_insert<GRBVar const&>(__gnu_cxx::__normal_iterator<GRBVar*, std::vector<GRBVar, std::allocator<GRBVar> > >, GRBVar const&) [43]
+-----------------------------------------------
+                                                 <spontaneous>
+[44]     0.0    0.01    0.00                 void std::vector<GRBConstr, std::allocator<GRBConstr> >::emplace_back<GRBConstr>(GRBConstr&&) [44]
+-----------------------------------------------
+                                                 <spontaneous>
+[45]     0.0    0.01    0.00                 std::vector<double, std::allocator<double> >::operator=(std::vector<double, std::allocator<double> > const&) [45]
+-----------------------------------------------
+                0.00    0.00     180/180         run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool) [2]
+[46]     0.0    0.00    0.00     180         make_new_heuristic_individual(IRP const&) [46]
+                0.00    0.00    4390/3679361085     void std::vector<int, std::allocator<int> >::_M_realloc_append<int const&>(int const&) [9]
+                0.00    0.00   11914/11986       exportAndPlotRoutes(IRP const&, Individual const&, ACO_Params const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) [49]
+                0.00    0.00     180/208         Individual::Individual(int, int) [50]
+                0.00    0.00      15/6622733     std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>::_M_gen_rand() [13]
+-----------------------------------------------
+                0.00    0.00       3/145083      run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool) [2]
+                0.00    0.00   72540/145083      build_routes_for_individual(Individual&, IRP const&, ACO_Params const&) [5]
+                0.00    0.00   72540/145083      std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > >::_M_fill_assign(unsigned long, std::vector<Route, std::allocator<Route> > const&) [48]
+[47]     0.0    0.00    0.00  145083         two_point_crossover_customer(Individual const&, Individual const&, IRP const&) [47]
+                0.00    0.00     763/176109      Route* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<Route const*, std::vector<Route, std::allocator<Route> > >, Route*>(__gnu_cxx::__normal_iterator<Route const*, std::vector<Route, std::allocator<Route> > >, __gnu_cxx::__normal_iterator<Route const*, std::vector<Route, std::allocator<Route> > >, Route*) [26]
+                0.00    0.00       3/169276      std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > >::_M_fill_assign(unsigned long, std::vector<long, std::allocator<long> > const&) [27]
+                0.00    0.00       3/208         Individual::Individual(int, int) [50]
+                0.00    0.00       6/11986       exportAndPlotRoutes(IRP const&, Individual const&, ACO_Params const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) [49]
+                0.00    0.00      12/192362      std::vector<int, std::allocator<int> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*>(__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, __gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*) [60]
+                0.00    0.00       6/48392       std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >::_M_fill_assign(unsigned long, std::vector<int, std::allocator<int> > const&) [64]
+                0.00    0.00       6/96181       std::vector<Route, std::allocator<Route> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, std::vector<Route, std::allocator<Route> >*>(__gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, __gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, std::vector<Route, std::allocator<Route> >*) [62]
+                0.00    0.00       6/96181       std::vector<long, std::allocator<long> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, std::vector<long, std::allocator<long> >*>(__gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, __gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, std::vector<long, std::allocator<long> >*) [63]
+                0.00    0.00       3/48156       std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > >::_M_default_append(unsigned long) [65]
+-----------------------------------------------
+                0.00    0.00   24180/24180       build_routes_for_individual(Individual&, IRP const&, ACO_Params const&) [5]
+[48]     0.0    0.00    0.00   24180         std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > >::_M_fill_assign(unsigned long, std::vector<Route, std::allocator<Route> > const&) [48]
+                0.00    0.00   72540/145083      two_point_crossover_customer(Individual const&, Individual const&, IRP const&) [47]
+-----------------------------------------------
+                0.00    0.00       1/11986       main [1]
+                0.00    0.00       5/11986       one_point_crossover_customer(Individual const&, Individual const&, IRP const&) [51]
+                0.00    0.00       6/11986       two_point_crossover_customer(Individual const&, Individual const&, IRP const&) [47]
+                0.00    0.00      60/11986       run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool) [2]
+                0.00    0.00   11914/11986       make_new_heuristic_individual(IRP const&) [46]
+[49]     0.0    0.00    0.00   11986         exportAndPlotRoutes(IRP const&, Individual const&, ACO_Params const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) [49]
+                0.00    0.00      31/6622733     std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>::_M_gen_rand() [13]
+-----------------------------------------------
+                0.00    0.00       3/208         two_point_crossover_customer(Individual const&, Individual const&, IRP const&) [47]
+                0.00    0.00       5/208         one_point_crossover_customer(Individual const&, Individual const&, IRP const&) [51]
+                0.00    0.00      20/208         run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool) [2]
+                0.00    0.00     180/208         make_new_heuristic_individual(IRP const&) [46]
+[50]     0.0    0.00    0.00     208         Individual::Individual(int, int) [50]
+                0.00    0.00     208/169276      std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > >::_M_fill_assign(unsigned long, std::vector<long, std::allocator<long> > const&) [27]
+                0.00    0.00     416/48392       std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >::_M_fill_assign(unsigned long, std::vector<int, std::allocator<int> > const&) [64]
+                0.00    0.00     188/48156       std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > >::_M_default_append(unsigned long) [65]
+-----------------------------------------------
+                0.00    0.00       5/5           run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool) [2]
+[51]     0.0    0.00    0.00       5         one_point_crossover_customer(Individual const&, Individual const&, IRP const&) [51]
+                0.00    0.00       5/169276      std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > >::_M_fill_assign(unsigned long, std::vector<long, std::allocator<long> > const&) [27]
+                0.00    0.00       5/208         Individual::Individual(int, int) [50]
+                0.00    0.00       5/11986       exportAndPlotRoutes(IRP const&, Individual const&, ACO_Params const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) [49]
+                0.00    0.00      20/192362      std::vector<int, std::allocator<int> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*>(__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, __gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*) [60]
+                0.00    0.00      10/48392       std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >::_M_fill_assign(unsigned long, std::vector<int, std::allocator<int> > const&) [64]
+                0.00    0.00      10/96181       std::vector<Route, std::allocator<Route> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, std::vector<Route, std::allocator<Route> >*>(__gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, __gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, std::vector<Route, std::allocator<Route> >*) [62]
+                0.00    0.00      10/96181       std::vector<long, std::allocator<long> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, std::vector<long, std::allocator<long> >*>(__gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, __gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, std::vector<long, std::allocator<long> >*) [63]
+                0.00    0.00       5/48156       std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > >::_M_default_append(unsigned long) [65]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[52]     0.0    0.00    0.00       1         IRP::readDataFromArchettiFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) [52]
+                0.00    0.00       1/1           std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > >::_M_fill_insert(__gnu_cxx::__normal_iterator<std::vector<double, std::allocator<double> >*, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > >, unsigned long, std::vector<double, std::allocator<double> > const&) [53]
+                0.00    0.00      27/39          std::enable_if<std::__and_<std::__not_<std::__is_tuple_like<Individual> >, std::is_move_constructible<Individual>, std::is_move_assignable<Individual> >::value, void>::type std::swap<Individual>(Individual&, Individual&) [74]
+                0.00    0.00      26/26          std::vector<int, std::allocator<int> >::_M_fill_assign(unsigned long, int const&) [76]
+                0.00    0.00       6/6           void std::vector<Customer, std::allocator<Customer> >::_M_realloc_append<Customer const&>(Customer const&) [79]
+                0.00    0.00       1/1           void std::vector<Depot, std::allocator<Depot> >::_M_realloc_append<Depot const&>(Depot const&) [85]
+-----------------------------------------------
+                0.00    0.00       1/1           IRP::readDataFromArchettiFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) [52]
+[53]     0.0    0.00    0.00       1         std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > >::_M_fill_insert(__gnu_cxx::__normal_iterator<std::vector<double, std::allocator<double> >*, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > >, unsigned long, std::vector<double, std::allocator<double> > const&) [53]
+                0.00    0.00       1/7153893     std::vector<double, std::allocator<double> >* std::__do_uninit_fill_n<std::vector<double, std::allocator<double> >*, unsigned long, std::vector<double, std::allocator<double> > >(std::vector<double, std::allocator<double> >*, unsigned long, std::vector<double, std::allocator<double> > const&) [15]
+-----------------------------------------------
+                0.00    0.00  293195/293195      calculate_reinsertion_data(Individual const&, IRP const&, ACO_Params const&, int) [6]
+[59]     0.0    0.00    0.00  293195         void std::vector<double, std::allocator<double> >::_M_realloc_append<double>(double&&) [59]
+-----------------------------------------------
+                0.00    0.00      12/192362      two_point_crossover_customer(Individual const&, Individual const&, IRP const&) [47]
+                0.00    0.00      20/192362      one_point_crossover_customer(Individual const&, Individual const&, IRP const&) [51]
+                0.00    0.00     122/192362      Individual::Individual(Individual const&) [72]
+                0.00    0.00     368/192362      run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool) [2]
+                0.00    0.00   47960/192362      computePerfectInventory_Gurobi(Customer const&, Depot const&, std::vector<double, std::allocator<double> > const&, std::vector<GurobiPWLCurve, std::allocator<GurobiPWLCurve> > const&, int, double) [16]
+                0.00    0.00   47960/192362      busca_local(Individual&, IRP const&, ACO_Params const&, bool) [4]
+                0.00    0.00   95920/192362      calculate_reinsertion_data(Individual const&, IRP const&, ACO_Params const&, int) [6]
+[60]     0.0    0.00    0.00  192362         std::vector<int, std::allocator<int> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*>(__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, __gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*) [60]
+-----------------------------------------------
+                0.00    0.00  143879/143879      calculate_reinsertion_data(Individual const&, IRP const&, ACO_Params const&, int) [6]
+[61]     0.0    0.00    0.00  143879         void std::vector<InsertionOption, std::allocator<InsertionOption> >::_M_realloc_append<InsertionOption>(InsertionOption&&) [61]
+-----------------------------------------------
+                0.00    0.00       6/96181       two_point_crossover_customer(Individual const&, Individual const&, IRP const&) [47]
+                0.00    0.00      10/96181       one_point_crossover_customer(Individual const&, Individual const&, IRP const&) [51]
+                0.00    0.00      61/96181       Individual::Individual(Individual const&) [72]
+                0.00    0.00     184/96181       run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool) [2]
+                0.00    0.00   23980/96181       computePerfectInventory_Gurobi(Customer const&, Depot const&, std::vector<double, std::allocator<double> > const&, std::vector<GurobiPWLCurve, std::allocator<GurobiPWLCurve> > const&, int, double) [16]
+                0.00    0.00   23980/96181       busca_local(Individual&, IRP const&, ACO_Params const&, bool) [4]
+                0.00    0.00   47960/96181       calculate_reinsertion_data(Individual const&, IRP const&, ACO_Params const&, int) [6]
+[62]     0.0    0.00    0.00   96181         std::vector<Route, std::allocator<Route> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, std::vector<Route, std::allocator<Route> >*>(__gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, __gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, std::vector<Route, std::allocator<Route> >*) [62]
+-----------------------------------------------
+                0.00    0.00       6/96181       two_point_crossover_customer(Individual const&, Individual const&, IRP const&) [47]
+                0.00    0.00      10/96181       one_point_crossover_customer(Individual const&, Individual const&, IRP const&) [51]
+                0.00    0.00      61/96181       Individual::Individual(Individual const&) [72]
+                0.00    0.00     184/96181       run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool) [2]
+                0.00    0.00   23980/96181       computePerfectInventory_Gurobi(Customer const&, Depot const&, std::vector<double, std::allocator<double> > const&, std::vector<GurobiPWLCurve, std::allocator<GurobiPWLCurve> > const&, int, double) [16]
+                0.00    0.00   23980/96181       busca_local(Individual&, IRP const&, ACO_Params const&, bool) [4]
+                0.00    0.00   47960/96181       calculate_reinsertion_data(Individual const&, IRP const&, ACO_Params const&, int) [6]
+[63]     0.0    0.00    0.00   96181         std::vector<long, std::allocator<long> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, std::vector<long, std::allocator<long> >*>(__gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, __gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, std::vector<long, std::allocator<long> >*) [63]
+-----------------------------------------------
+                0.00    0.00       6/48392       two_point_crossover_customer(Individual const&, Individual const&, IRP const&) [47]
+                0.00    0.00      10/48392       one_point_crossover_customer(Individual const&, Individual const&, IRP const&) [51]
+                0.00    0.00     416/48392       Individual::Individual(int, int) [50]
+                0.00    0.00   47960/48392       calculate_reinsertion_data(Individual const&, IRP const&, ACO_Params const&, int) [6]
+[64]     0.0    0.00    0.00   48392         std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >::_M_fill_assign(unsigned long, std::vector<int, std::allocator<int> > const&) [64]
+                0.00    0.00     392/392         std::vector<int, std::allocator<int> >* std::__do_uninit_fill_n<std::vector<int, std::allocator<int> >*, unsigned long, std::vector<int, std::allocator<int> > >(std::vector<int, std::allocator<int> >*, unsigned long, std::vector<int, std::allocator<int> > const&) [69]
+-----------------------------------------------
+                0.00    0.00       3/48156       two_point_crossover_customer(Individual const&, Individual const&, IRP const&) [47]
+                0.00    0.00       5/48156       one_point_crossover_customer(Individual const&, Individual const&, IRP const&) [51]
+                0.00    0.00     188/48156       Individual::Individual(int, int) [50]
+                0.00    0.00   47960/48156       calculate_reinsertion_data(Individual const&, IRP const&, ACO_Params const&, int) [6]
+[65]     0.0    0.00    0.00   48156         std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > >::_M_default_append(unsigned long) [65]
+-----------------------------------------------
+                0.00    0.00   23980/23980       calculate_reinsertion_data(Individual const&, IRP const&, ACO_Params const&, int) [6]
+[66]     0.0    0.00    0.00   23980         std::vector<GurobiPWLCurve, std::allocator<GurobiPWLCurve> >::_M_default_append(unsigned long) [66]
+-----------------------------------------------
+                0.00    0.00   23980/23980       calculate_reinsertion_data(Individual const&, IRP const&, ACO_Params const&, int) [6]
+[67]     0.0    0.00    0.00   23980         std::vector<long, std::allocator<long> >::_M_fill_insert(__gnu_cxx::__normal_iterator<long*, std::vector<long, std::allocator<long> > >, unsigned long, long const&) [67]
+-----------------------------------------------
+                0.00    0.00     720/720         void std::shuffle<__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&>(__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, __gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&) [73]
+[68]     0.0    0.00    0.00     720         void std::_Destroy_aux<false>::__destroy<std::vector<long, std::allocator<long> >*>(std::vector<long, std::allocator<long> >*, std::vector<long, std::allocator<long> >*) [68]
+-----------------------------------------------
+                0.00    0.00     392/392         std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >::_M_fill_assign(unsigned long, std::vector<int, std::allocator<int> > const&) [64]
+[69]     0.0    0.00    0.00     392         std::vector<int, std::allocator<int> >* std::__do_uninit_fill_n<std::vector<int, std::allocator<int> >*, unsigned long, std::vector<int, std::allocator<int> > >(std::vector<int, std::allocator<int> >*, unsigned long, std::vector<int, std::allocator<int> > const&) [69]
+-----------------------------------------------
+                0.00    0.00       1/305         main [1]
+                0.00    0.00     304/305         run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool) [2]
+[70]     0.0    0.00    0.00     305         Individual::~Individual() [70]
+-----------------------------------------------
+                0.00    0.00     196/196         std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > >::_M_fill_assign(unsigned long, std::vector<long, std::allocator<long> > const&) [27]
+[71]     0.0    0.00    0.00     196         std::vector<long, std::allocator<long> >* std::__do_uninit_fill_n<std::vector<long, std::allocator<long> >*, unsigned long, std::vector<long, std::allocator<long> > >(std::vector<long, std::allocator<long> >*, unsigned long, std::vector<long, std::allocator<long> > const&) [71]
+-----------------------------------------------
+                0.00    0.00      61/61          run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool) [2]
+[72]     0.0    0.00    0.00      61         Individual::Individual(Individual const&) [72]
+                0.00    0.00     122/192362      std::vector<int, std::allocator<int> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*>(__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, __gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*) [60]
+                0.00    0.00      61/96181       std::vector<Route, std::allocator<Route> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, std::vector<Route, std::allocator<Route> >*>(__gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, __gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, std::vector<Route, std::allocator<Route> >*) [62]
+                0.00    0.00      61/96181       std::vector<long, std::allocator<long> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, std::vector<long, std::allocator<long> >*>(__gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, __gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, std::vector<long, std::allocator<long> >*) [63]
+-----------------------------------------------
+                0.00    0.00      60/60          busca_local(Individual&, IRP const&, ACO_Params const&, bool) [4]
+[73]     0.0    0.00    0.00      60         void std::shuffle<__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&>(__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, __gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&) [73]
+                0.00    0.00     720/720         void std::_Destroy_aux<false>::__destroy<std::vector<long, std::allocator<long> >*>(std::vector<long, std::allocator<long> >*, std::vector<long, std::allocator<long> >*) [68]
+-----------------------------------------------
+                0.00    0.00       1/39          void std::__introsort_loop<__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#1}> >(__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, __gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#1}>) [86]
+                0.00    0.00      11/39          void std::__introsort_loop<__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#2}> >(__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, __gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#2}>) [78]
+                0.00    0.00      27/39          IRP::readDataFromArchettiFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) [52]
+[74]     0.0    0.00    0.00      39         std::enable_if<std::__and_<std::__not_<std::__is_tuple_like<Individual> >, std::is_move_constructible<Individual>, std::is_move_assignable<Individual> >::value, void>::type std::swap<Individual>(Individual&, Individual&) [74]
+-----------------------------------------------
+                0.00    0.00      28/28          load_parameters_from_file(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, GA_Params&, ACO_Params&) [82]
+[75]     0.0    0.00    0.00      28         trim(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&) [75]
+-----------------------------------------------
+                0.00    0.00      26/26          IRP::readDataFromArchettiFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) [52]
+[76]     0.0    0.00    0.00      26         std::vector<int, std::allocator<int> >::_M_fill_assign(unsigned long, int const&) [76]
+-----------------------------------------------
+                0.00    0.00      11/11          run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool) [2]
+[77]     0.0    0.00    0.00      11         std::vector<Individual, std::allocator<Individual> >::reserve(unsigned long) [77]
+-----------------------------------------------
+                                  11             void std::__introsort_loop<__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#2}> >(__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, __gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#2}>) [78]
+                0.00    0.00      10/10          run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool) [2]
+[78]     0.0    0.00    0.00      10+11      void std::__introsort_loop<__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#2}> >(__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, __gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#2}>) [78]
+                0.00    0.00      11/39          std::enable_if<std::__and_<std::__not_<std::__is_tuple_like<Individual> >, std::is_move_constructible<Individual>, std::is_move_assignable<Individual> >::value, void>::type std::swap<Individual>(Individual&, Individual&) [74]
+                                  11             void std::__introsort_loop<__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#2}> >(__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, __gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#2}>) [78]
+-----------------------------------------------
+                0.00    0.00       6/6           IRP::readDataFromArchettiFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) [52]
+[79]     0.0    0.00    0.00       6         void std::vector<Customer, std::allocator<Customer> >::_M_realloc_append<Customer const&>(Customer const&) [79]
+-----------------------------------------------
+                0.00    0.00       5/5           main [1]
+[80]     0.0    0.00    0.00       5         std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string<std::allocator<char> >(char const*, std::allocator<char> const&) [80]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[81]     0.0    0.00    0.00       1         printDeliveriesMatrix(Individual const&, IRP const&) [81]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[82]     0.0    0.00    0.00       1         load_parameters_from_file(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, GA_Params&, ACO_Params&) [82]
+                0.00    0.00      28/28          trim(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&) [75]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[83]     0.0    0.00    0.00       1         IRP::~IRP() [83]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[84]     0.0    0.00    0.00       1         IRP::printData() const [84]
+-----------------------------------------------
+                0.00    0.00       1/1           IRP::readDataFromArchettiFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) [52]
+[85]     0.0    0.00    0.00       1         void std::vector<Depot, std::allocator<Depot> >::_M_realloc_append<Depot const&>(Depot const&) [85]
+-----------------------------------------------
+                                   1             void std::__introsort_loop<__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#1}> >(__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, __gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#1}>) [86]
+                0.00    0.00       1/1           run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool) [2]
+[86]     0.0    0.00    0.00       1+1       void std::__introsort_loop<__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#1}> >(__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, __gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#1}>) [86]
+                0.00    0.00       1/39          std::enable_if<std::__and_<std::__not_<std::__is_tuple_like<Individual> >, std::is_move_constructible<Individual>, std::is_move_assignable<Individual> >::value, void>::type std::swap<Individual>(Individual&, Individual&) [74]
+                                   1             void std::__introsort_loop<__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#1}> >(__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, __gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#1}>) [86]
+-----------------------------------------------
+                0.00    0.00       1/1           main [1]
+[87]     0.0    0.00    0.00       1         bool std::operator==<char, std::char_traits<char>, std::allocator<char> >(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, char const*) [87]
+-----------------------------------------------
+
+ This table describes the call tree of the program, and was sorted by
+ the total amount of time spent in each function and its children.
+
+ Each entry in this table consists of several lines.  The line with the
+ index number at the left hand margin lists the current function.
+ The lines above it list the functions that called this function,
+ and the lines below it list the functions this one called.
+ This line lists:
+     index	A unique number given to each element of the table.
+		Index numbers are sorted numerically.
+		The index number is printed next to every function name so
+		it is easier to look up where the function is in the table.
+
+     % time	This is the percentage of the `total' time that was spent
+		in this function and its children.  Note that due to
+		different viewpoints, functions excluded by options, etc,
+		these numbers will NOT add up to 100%.
+
+     self	This is the total amount of time spent in this function.
+
+     children	This is the total amount of time propagated into this
+		function by its children.
+
+     called	This is the number of times the function was called.
+		If the function called itself recursively, the number
+		only includes non-recursive calls, and is followed by
+		a `+' and the number of recursive calls.
+
+     name	The name of the current function.  The index number is
+		printed after it.  If the function is a member of a
+		cycle, the cycle number is printed between the
+		function's name and the index number.
+
+
+ For the function's parents, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the function into this parent.
+
+     children	This is the amount of time that was propagated from
+		the function's children into this parent.
+
+     called	This is the number of times this parent called the
+		function `/' the total number of times the function
+		was called.  Recursive calls to the function are not
+		included in the number after the `/'.
+
+     name	This is the name of the parent.  The parent's index
+		number is printed after it.  If the parent is a
+		member of a cycle, the cycle number is printed between
+		the name and the index number.
+
+ If the parents of the function cannot be determined, the word
+ `<spontaneous>' is printed in the `name' field, and all the other
+ fields are blank.
+
+ For the function's children, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the child into the function.
+
+     children	This is the amount of time that was propagated from the
+		child's children to the function.
+
+     called	This is the number of times the function called
+		this child `/' the total number of times the child
+		was called.  Recursive calls by the child are not
+		listed in the number after the `/'.
+
+     name	This is the name of the child.  The child's index
+		number is printed after it.  If the child is a
+		member of a cycle, the cycle number is printed
+		between the name and the index number.
+
+ If there are any cycles (circles) in the call graph, there is an
+ entry for the cycle-as-a-whole.  This entry shows who called the
+ cycle (as parents) and the members of the cycle (as children.)
+ The `+' recursive calls entry shows the number of function calls that
+ were internal to the cycle, and the calls entry for each member shows,
+ for that member, how many times it was called from other members of
+ the cycle.
+
+Copyright (C) 2012-2024 Free Software Foundation, Inc.
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.
+
+Index by function name
+
+   [4] busca_local(Individual&, IRP const&, ACO_Params const&, bool) [52] IRP::readDataFromArchettiFile(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) [53] std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > >::_M_fill_insert(__gnu_cxx::__normal_iterator<std::vector<double, std::allocator<double> >*, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > >, unsigned long, std::vector<double, std::allocator<double> > const&)
+   [7] improve_routes(std::vector<Route, std::allocator<Route> >&, IRP const&, std::vector<int, std::allocator<int> > const&, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > const&, bool) [83] IRP::~IRP() [64] std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >::_M_fill_assign(unsigned long, std::vector<int, std::allocator<int> > const&)
+  [17] check_feasibility(Individual&, IRP const&) [33] GRBModel::setObjective(GRBLinExpr, int) [27] std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > >::_M_fill_assign(unsigned long, std::vector<long, std::allocator<long> > const&)
+   [3] runACO_for_period(IRP const&, std::vector<int, std::allocator<int> > const&, ACO_Params const&, bool) [34] GRBModel::setObjective(GRBQuadExpr, int) [24] void std::vector<double, std::allocator<double> >::_M_range_insert<__gnu_cxx::__normal_iterator<double const*, std::vector<double, std::allocator<double> > > >(__gnu_cxx::__normal_iterator<double*, std::vector<double, std::allocator<double> > >, __gnu_cxx::__normal_iterator<double const*, std::vector<double, std::allocator<double> > >, __gnu_cxx::__normal_iterator<double const*, std::vector<double, std::allocator<double> > >, std::forward_iterator_tag)
+  [10] apply_2opt_on_route(Route&, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > const&, IRP const&, std::vector<int, std::allocator<int> > const&) [35] GRBModel::set(GRB_DoubleParam, double) [18] std::vector<double, std::allocator<double> >::_M_default_append(unsigned long)
+  [49] exportAndPlotRoutes(IRP const&, Individual const&, ACO_Params const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) [36] GRBModel::addVar(double, double, double, char, char const*) [28] void std::vector<double, std::allocator<double> >::_M_realloc_append<double const&>(double const&)
+  [29] find_best_insertion(Route const&, int, IRP const&) [37] GRBModel::optimize() [59] void std::vector<double, std::allocator<double> >::_M_realloc_append<double>(double&&)
+  [30] calculate_total_cost(Individual&, IRP const&) [21] GRBModel::populate(bool) [45] std::vector<double, std::allocator<double> >::operator=(std::vector<double, std::allocator<double> > const&)
+  [81] printDeliveriesMatrix(Individual const&, IRP const&) [38] GRBModel::addConstr(GRBLinExpr const&, char, double, char const*) [76] std::vector<int, std::allocator<int> >::_M_fill_assign(unsigned long, int const&)
+   [2] run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool) [39] GRBModel::addConstr(GRBLinExpr const&, char, double, double, char const*) [9] void std::vector<int, std::allocator<int> >::_M_realloc_append<int const&>(int const&)
+  [11] apply_inter_route_swap(std::vector<Route, std::allocator<Route> >&, IRP const&, std::vector<int, std::allocator<int> > const&, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > const&) [40] GRBModel::addConstr(GRBTempConstr const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) [14] void std::vector<int, std::allocator<int> >::_M_realloc_append<int>(int&&)
+  [82] load_parameters_from_file(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, GA_Params&, ACO_Params&) [41] GRBConstr::GRBConstr(_GRBmodel*, int) [67] std::vector<long, std::allocator<long> >::_M_fill_insert(__gnu_cxx::__normal_iterator<long*, std::vector<long, std::allocator<long> > >, unsigned long, long const&)
+  [12] apply_inter_route_relocate(std::vector<Route, std::allocator<Route> >&, IRP const&, std::vector<int, std::allocator<int> > const&, std::vector<std::vector<double, std::allocator<double> >, std::allocator<std::vector<double, std::allocator<double> > > > const&) [84] IRP::printData() const [80] std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string<std::allocator<char> >(char const*, std::allocator<char> const&)
+   [6] calculate_reinsertion_data(Individual const&, IRP const&, ACO_Params const&, int) [22] GRBVar::get(GRB_DoubleAttr) const [26] Route* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<Route const*, std::vector<Route, std::allocator<Route> > >, Route*>(__gnu_cxx::__normal_iterator<Route const*, std::vector<Route, std::allocator<Route> > >, __gnu_cxx::__normal_iterator<Route const*, std::vector<Route, std::allocator<Route> > >, Route*)
+   [5] build_routes_for_individual(Individual&, IRP const&, ACO_Params const&) [23] GRBVar::getcolno() const [62] std::vector<Route, std::allocator<Route> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, std::vector<Route, std::allocator<Route> >*>(__gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, __gnu_cxx::__normal_iterator<std::vector<Route, std::allocator<Route> > const*, std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > > >, std::vector<Route, std::allocator<Route> >*)
+  [51] one_point_crossover_customer(Individual const&, Individual const&, IRP const&) [68] void std::_Destroy_aux<false>::__destroy<std::vector<long, std::allocator<long> >*>(std::vector<long, std::allocator<long> >*, std::vector<long, std::allocator<long> >*) [60] std::vector<int, std::allocator<int> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*>(__gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, __gnu_cxx::__normal_iterator<std::vector<int, std::allocator<int> > const*, std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > > >, std::vector<int, std::allocator<int> >*)
+  [47] two_point_crossover_customer(Individual const&, Individual const&, IRP const&) [13] std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>::_M_gen_rand() [63] std::vector<long, std::allocator<long> >* std::__do_uninit_copy<__gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, std::vector<long, std::allocator<long> >*>(__gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, __gnu_cxx::__normal_iterator<std::vector<long, std::allocator<long> > const*, std::vector<std::vector<long, std::allocator<long> >, std::allocator<std::vector<long, std::allocator<long> > > > >, std::vector<long, std::allocator<long> >*)
+  [46] make_new_heuristic_individual(IRP const&) [77] std::vector<Individual, std::allocator<Individual> >::reserve(unsigned long) [78] void std::__introsort_loop<__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#2}> >(__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, __gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#2}>)
+  [16] computePerfectInventory_Gurobi(Customer const&, Depot const&, std::vector<double, std::allocator<double> > const&, std::vector<GurobiPWLCurve, std::allocator<GurobiPWLCurve> > const&, int, double) [66] std::vector<GurobiPWLCurve, std::allocator<GurobiPWLCurve> >::_M_default_append(unsigned long) [86] void std::__introsort_loop<__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#1}> >(__gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, __gnu_cxx::__normal_iterator<Individual*, std::vector<Individual, std::allocator<Individual> > >, long, __gnu_cxx::__ops::_Iter_comp_iter<run_genetic_algorithm(IRP const&, GA_Params const&, ACO_Params const&, bool)::{lambda(Individual const&, Individual const&)#1}>)
+  [75] trim(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&) [61] void std::vector<InsertionOption, std::allocator<InsertionOption> >::_M_realloc_append<InsertionOption>(InsertionOption&&) [15] std::vector<double, std::allocator<double> >* std::__do_uninit_fill_n<std::vector<double, std::allocator<double> >*, unsigned long, std::vector<double, std::allocator<double> > >(std::vector<double, std::allocator<double> >*, unsigned long, std::vector<double, std::allocator<double> > const&)
+  [19] GRBLinExpr::multAdd(double, GRBLinExpr const&) [85] void std::vector<Depot, std::allocator<Depot> >::_M_realloc_append<Depot const&>(Depot const&) [69] std::vector<int, std::allocator<int> >* std::__do_uninit_fill_n<std::vector<int, std::allocator<int> >*, unsigned long, std::vector<int, std::allocator<int> > >(std::vector<int, std::allocator<int> >*, unsigned long, std::vector<int, std::allocator<int> > const&)
+  [31] GRBLinExpr::GRBLinExpr(GRBLinExpr const&) [42] void std::vector<GRBVar, std::allocator<GRBVar> >::_M_range_insert<__gnu_cxx::__normal_iterator<GRBVar const*, std::vector<GRBVar, std::allocator<GRBVar> > > >(__gnu_cxx::__normal_iterator<GRBVar*, std::vector<GRBVar, std::allocator<GRBVar> > >, __gnu_cxx::__normal_iterator<GRBVar const*, std::vector<GRBVar, std::allocator<GRBVar> > >, __gnu_cxx::__normal_iterator<GRBVar const*, std::vector<GRBVar, std::allocator<GRBVar> > >, std::forward_iterator_tag) [71] std::vector<long, std::allocator<long> >* std::__do_uninit_fill_n<std::vector<long, std::allocator<long> >*, unsigned long, std::vector<long, std::allocator<long> > >(std::vector<long, std::allocator<long> >*, unsigned long, std::vector<long, std::allocator<long> > const&)
+  [32] GRBLinExpr::operator=(GRBLinExpr const&) [43] void std::vector<GRBVar, std::allocator<GRBVar> >::_M_realloc_insert<GRBVar const&>(__gnu_cxx::__normal_iterator<GRBVar*, std::vector<GRBVar, std::allocator<GRBVar> > >, GRBVar const&) [74] std::enable_if<std::__and_<std::__not_<std::__is_tuple_like<Individual> >, std::is_move_constructible<Individual>, std::is_move_assignable<Individual> >::value, void>::type std::swap<Individual>(Individual&, Individual&)
+  [72] Individual::Individual(Individual const&) [79] void std::vector<Customer, std::allocator<Customer> >::_M_realloc_append<Customer const&>(Customer const&) [73] void std::shuffle<__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&>(__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, __gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>&)
+  [50] Individual::Individual(int, int) [44] void std::vector<GRBConstr, std::allocator<GRBConstr> >::emplace_back<GRBConstr>(GRBConstr&&) [87] bool std::operator==<char, std::char_traits<char>, std::allocator<char> >(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, char const*)
+  [70] Individual::~Individual() [48] std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > >::_M_fill_assign(unsigned long, std::vector<Route, std::allocator<Route> > const&) [8] _init
+  [20] GRBQuadExpr::GRBQuadExpr(double) [65] std::vector<std::vector<Route, std::allocator<Route> >, std::allocator<std::vector<Route, std::allocator<Route> > > >::_M_default_append(unsigned long) [25] frame_dummy
