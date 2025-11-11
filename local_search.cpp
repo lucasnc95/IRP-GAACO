@@ -1,9 +1,3 @@
-/*
- * ARQUIVO MODIFICADO: local_search.cpp
- * Funções de busca local refatoradas para usar a struct Route.
- * A passagem do vetor `route_loads` foi removida, pois
- * a capacidade agora é rastreada dentro de cada struct Route.
- */
 #include "local_search.hpp" // <-- MUDANÇA: Inclui o novo cabeçalho
 #include "irp.hpp"
 #include "route.hpp"
@@ -14,10 +8,7 @@
 
 using std::vector;
 
-// --- Nova Função Auxiliar ---
-/**
- * @brief Recalcula o custo e a capacidade restante de uma única rota.
- */
+
 void recalculate_route_metrics(Route& route, const IRP& irp, 
                                const vector<int>& deliveries, 
                                const vector<vector<double>>& dist) 
@@ -36,8 +27,7 @@ void recalculate_route_metrics(Route& route, const IRP& irp,
 }
 
 
-// <-- MUDANÇA: Assinatura e lógica atualizadas -->
-// Agora simplesmente soma os custos pré-calculados de cada rota.
+
 static double calculate_total_cost(const vector<Route>& routes) {
     double total_cost = 0.0;
     for (const auto& route : routes) {
@@ -46,8 +36,7 @@ static double calculate_total_cost(const vector<Route>& routes) {
     return total_cost;
 }
 
-// <-- MUDANÇA: Assinatura e lógica atualizadas -->
-// Agora opera em uma 'Route&' e atualiza seu custo interno.
+
 bool apply_2opt_on_route(Route& route, const vector<vector<double>>& dist, const IRP& irp, const vector<int>& deliveries) {
     if (route.visits.size() <= 4) return false;
 

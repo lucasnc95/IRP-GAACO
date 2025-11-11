@@ -15,8 +15,8 @@
 
 using std::vector;
 
+
 void check_feasibility(Individual& ind, const IRP& irp) {
-    
     // --- Checagem 1: Validação de Rota e Capacidade (Por Período) ---
     long total_fleet_capacity = (long)irp.nVehicles * irp.Capacity;
 

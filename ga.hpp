@@ -2,7 +2,7 @@
 #define GA_HPP
 
 #include "irp.hpp"
-#include "aco.hpp"
+//#include "aco.hpp"
 #include "parameters.hpp"
 #include "individual.hpp"
 #include <vector>
@@ -13,6 +13,8 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
 
 // Função de criação de indivíduo (Genótipo)
 Individual make_new_heuristic_individual(const IRP& irp);
+
+Individual make_new_heuristic_individual(const IRP& irp, const ACO_Params& aco_params);
 
 // Operadores genéticos
 std::pair<Individual, Individual> one_point_crossover_customer(const Individual& a, const Individual& b, const IRP& irp);

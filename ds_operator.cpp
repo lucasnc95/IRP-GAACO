@@ -1,5 +1,5 @@
 #include "ds_operator.hpp"
-#include "aco.hpp"      // Para runACO_for_period
+//#include "aco.hpp"      // Para runACO_for_period
 #include "utils.hpp"    // Para randint
 #include "route.hpp"
 #include "evaluation.hpp" // Para calculate_total_cost, build_routes_for_individual
@@ -144,31 +144,42 @@ ReinsertionData calculate_reinsertion_data(
     ReinsertionData data(irp.nPeriods);
     data.customer_id = c_id_internal;
 
+    // Ação 2: Salvar Dados "Antes"
     Individual original_for_eval = original_ind;
     calculate_total_cost(original_for_eval, irp); 
     data.cost_before_removal = original_for_eval.fitness; 
     data.routes_before_removal = original_ind.routes_per_period;
 
+    // --- Ação 3: Criar Solução Temporária e Reroteirizar (MODIFICADO) ---
     Individual temp_sol = original_ind;
     double temp_routing_cost = 0.0;
+
     for (int t = 0; t < irp.nPeriods; ++t) {
-        if (original_ind.deliveries[t][c_id_internal] > 0) {
-            temp_sol.deliveries[t][c_id_internal] = 0;
-            long period_load = std::accumulate(temp_sol.deliveries[t].begin(), temp_sol.deliveries[t].end(), 0L);
-            if (period_load > 0) {
-                ACO_Result ares = runACO_for_period(irp, temp_sol.deliveries[t], aco_params, false);
-                temp_sol.routes_per_period[t] = (ares.bestCost < PENALTY_COST / 10.0) ? ares.bestRoutes : std::vector<Route>();
-            } else {
-                temp_sol.routes_per_period[t].clear();
-            }
-        } 
+        
+        // Zera a entrega do cliente 'c' (seja 0 ou >0)
+        temp_sol.deliveries[t][c_id_internal] = 0;
+            
+        // Reconstrói as rotas para o dia 't' usando SWEEP
+        // (A 'build_routes_with_sweep' lida com 'period_load == 0' internamente)
+        std::vector<Route> new_routes = build_routes_with_sweep(
+            irp, 
+            temp_sol.deliveries[t], // O plano sem o cliente 'c'
+            aco_params                // Para a flag pLocalSearch
+        );
+            
+        temp_sol.routes_per_period[t] = new_routes;
+        
+        // Acumula o custo das novas rotas
         for (const auto& route : temp_sol.routes_per_period[t]) {
             temp_routing_cost += route.cost;
         }
     }
     data.routes_after_removal = temp_sol.routes_per_period;
     data.solution_without_customer = temp_sol; 
+    // --- FIM DA MODIFICAÇÃO ---
 
+    // Ação 4: Calcular Custo "Depois" (Parcial)
+    // (Esta lógica permanece a mesma)
     double temp_customer_holding_cost = 0.0, temp_depot_holding_cost = 0.0;
     vector<long> customer_inv(irp.nCustomers);
     for (int i = 0; i < irp.nCustomers; ++i) customer_inv[i] = irp.customers[i].initialInv;
@@ -189,6 +200,8 @@ ReinsertionData calculate_reinsertion_data(
     }
     data.cost_after_removal = temp_routing_cost + temp_customer_holding_cost + temp_depot_holding_cost;
     
+    // Ação 5: Calcular Max Inventário e Curvas F_t(q_t)
+    // (Esta lógica permanece a mesma)
     long current_inv_c = irp.customers[c_id_internal].initialInv;
     for (int t = 0; t < irp.nPeriods; ++t) {
         data.max_q_inventory[t] = irp.customers[c_id_internal].maxLevelInv - current_inv_c;

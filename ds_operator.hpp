@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <gurobi_c++.h> // Incluído para o Gurobi
+#include "route_builder.hpp"
 #include "irp.hpp"
 #include "individual.hpp"
 #include "parameters.hpp"
