@@ -1,42 +1,39 @@
+/*
+ * ARQUIVO MODIFICADO: ds_operator.hpp
+ *
+ * Adicionada a declaração de 'run_simple_reinsertion_search'.
+ */
+
 #ifndef DS_OPERATOR_HPP
 #define DS_OPERATOR_HPP
 
 #include <vector>
-#include <gurobi_c++.h> // Incluído para o Gurobi
-#include "route_builder.hpp"
+#include <gurobi_c++.h> 
 #include "irp.hpp"
 #include "individual.hpp"
 #include "parameters.hpp"
 
-
+// ... (Structs GurobiPWLCurve, GurobiInventoryResult, ReinsertionData permanecem iguais) ...
 struct GurobiPWLCurve {
-    std::vector<double> q_points;    // pontos x (quantidade)
-    std::vector<double> cost_points; // pontos y (custo de frete)
+    std::vector<double> q_points;    
+    std::vector<double> cost_points; 
 };
-
 
 struct GurobiInventoryResult {
-    std::vector<double> q;  // entregas ótimas por período
-    std::vector<double> S;  // inventários ótimos por período
-    double totalCost;       // Custo total 
+    std::vector<double> q;  
+    std::vector<double> S;  
+    double totalCost;       
 };
-
 
 struct ReinsertionData {
     int customer_id = -1; 
-    
-    // Dados "ANTES"
     double cost_before_removal;
     std::vector<std::vector<Route>> routes_before_removal;
-    
-    // Dados "DEPOIS" (sem o cliente)
-    double cost_after_removal;
+    double cost_after_removal; 
     std::vector<std::vector<Route>> routes_after_removal;
-    Individual solution_without_customer; // Solução temporária (genótipo + fenótipo)
-    
-    // Dados para o Gurobi
-    std::vector<GurobiPWLCurve> insertion_cost_curves; // Vetor de F_t(q_t)
-    std::vector<long> max_q_inventory; // Vetor de U_i - I_{i,t-1}
+    Individual solution_without_customer; 
+    std::vector<GurobiPWLCurve> insertion_cost_curves; 
+    std::vector<long> max_q_inventory; 
 
     ReinsertionData(int nPeriods = 0) {
         cost_before_removal = 0.0;
@@ -48,8 +45,7 @@ struct ReinsertionData {
     }
 };
 
-
-
+// --- Funções Existentes ---
 GurobiInventoryResult computePerfectInventory_Gurobi(
     const Customer& cust,
     const Depot& depot,
@@ -58,18 +54,33 @@ GurobiInventoryResult computePerfectInventory_Gurobi(
     int T, double qmax
 );
 
-
 ReinsertionData calculate_reinsertion_data(
     const Individual& original_ind, 
     const IRP& irp, 
     const ACO_Params& aco_params,
-    int c_id_internal // ID do cliente a ser removido (0-based)
+    int c_id_internal
 );
 
+void run_vnd_ds_operator(
+    Individual& original_sol, 
+    const IRP& irp, 
+    const ACO_Params& aco_params,
+    bool verbose
+);
 
-void busca_local(Individual& original_sol, const IRP& irp, const ACO_Params& aco_params, bool verbose);
-
+// --- NOVA FUNÇÃO ---
+/**
+ * @brief Busca Local Rápida (Simple Reinsertion).
+ * Remove o cliente, otimiza o inventário com Gurobi baseando-se nas
+ * rotas existentes e reinsere usando Cheapest Insertion (sem reroteirizar).
+ */
+void run_simple_reinsertion_search(
+    Individual& sol, 
+    const IRP& irp, 
+    const ACO_Params& aco_params,
+    bool verbose
+);
 
 void print_routes_for_period(const std::vector<Route>& routes, const IRP& irp, int t);
 
-#endif 
+#endif // DS_OPERATOR_HPP

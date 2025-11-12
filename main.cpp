@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
         return 1;
     }
     bool verbose_mode = (argc > 4 && std::string(argv[4]) == "--verbose");
-    
+    verbose_mode = true;
     rng.seed(seed);
 
     GA_Params ga_params;

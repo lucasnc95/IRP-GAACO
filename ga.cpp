@@ -281,22 +281,12 @@ void build_routes_for_individual(Individual& ind, const IRP& irp, const ACO_Para
 
 
 
-
-
-
-
-
-
-
-
-
-
 Individual make_new_heuristic_individual(const IRP& irp, const ACO_Params& aco_params) {
     
     Individual ind(irp.nPeriods, irp.nCustomers);
     
     // --- PASSO 1: Sortear 20% dos clientes para reservar ---
-    int num_reserved = static_cast<int>(irp.nCustomers * 0.7);
+    int num_reserved = static_cast<int>(irp.nCustomers * 1);
     if (num_reserved == 0 && irp.nCustomers > 0) num_reserved = 1; // Garante pelo menos 1
     
     vector<int> customer_indices(irp.nCustomers);
@@ -355,7 +345,7 @@ Individual make_new_heuristic_individual(const IRP& irp, const ACO_Params& aco_p
 
         for (int c : customer_order) {
             if (remaining_fleet_cap <= 0) break;
-            if (randreal() < 0.30) { 
+            if (randreal() < 0.15) { 
                 int N = randint(1, 3);
                 long q_extra = 0;
                 for (int t_future = t + 1; t_future <= t + N && t_future < irp.nPeriods; ++t_future) {
@@ -432,14 +422,154 @@ Individual make_new_heuristic_individual(const IRP& irp, const ACO_Params& aco_p
         // pois a próxima inserção (passo 1) recalculará tudo)
     }
 
-    // O indivíduo 'ind' agora está completo (100% dos clientes)
     return ind;
 }
 
 
 
 
+// Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, const ACO_Params& aco_params, bool verbose) {
+    
+//     const double LARGE_COST = 1e18;
+//     vector<Individual> pop;
+//     pop.reserve(ga_params.popSize);
+    
+//     std::cout << "Inicializando população..." << std::endl;
+//     for (int i = 0; i < ga_params.popSize; ++i) {
+//         Individual ind = make_new_heuristic_individual(irp, aco_params);
+        
+//         build_routes_for_individual(ind, irp, aco_params);
+//        // busca_local(ind, irp, aco_params, false); 
+//         check_feasibility(ind, irp); 
+        
+//         if (ind.is_feasible) {
+//             calculate_total_cost(ind, irp);
+//         } else {
+//             ind.fitness = LARGE_COST;
+//         }
+//         pop.push_back(ind);
+//     }
+//     std::cout << "População inicial educada e avaliada." << std::endl;
+    
+//     std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b){
+//         return a.fitness < b.fitness;
+//     });
+//     Individual bestOverall = pop.front();
+    
+//     std::cout << "\nIniciando loop do GA para " << ga_params.nGen << " gerações..." << std::endl;
+//     for (int gen = 0; gen < ga_params.nGen; ++gen) {
+//         std::cout<<std::endl;
+//         std::cout<<std::endl;
+//         std::cout<<"Iniciando geração "<<gen+1<<std::endl;
+//         vector<Individual> newPop;
+//         newPop.reserve(ga_params.popSize);
 
+//         // 1. Elitismo
+//         int num_elites = (int)(ga_params.popSize * 0.10);
+//         for(int i = 0; i < num_elites && i < pop.size(); ++i) {
+//             newPop.push_back(pop[i]);
+//         }
+//         std::cout<<"Elitismo completo com "<<num_elites<<" indivíduos."<<std::endl;
+//         // 2. Geração de Filhos
+//         int children_target_count = num_elites + (int)(ga_params.popSize * 0.70);
+//         int crossover_tries = 0; 
+
+//         while (newPop.size() < children_target_count) {
+//             std::cout<<"Gerando filhos: "<<newPop.size()+1<<" de "<<children_target_count<<std::endl;   
+//             Individual parent1 = tournamentSelect(pop, ga_params.tournamentK);
+//             Individual parent2 = tournamentSelect(pop, ga_params.tournamentK);
+            
+//             std::pair<Individual, Individual> children;
+//             if (randreal() < ga_params.pCrossover) {
+//                 children = (randreal() < 0.5) ? 
+//                            one_point_crossover_customer(parent1, parent2, irp) :
+//                            two_point_crossover_customer(parent1, parent2, irp);
+//             } else {
+//                 children = {parent1, parent2};
+//             }
+            
+//             // --- Processa o Filho 1 ---
+            
+//             build_routes_for_individual(children.first, irp, aco_params);
+//             if(gen % 50 == 0)busca_local(children.first, irp, aco_params, false);
+//             check_feasibility(children.first, irp); 
+            
+//             if (children.first.is_feasible) {
+//                 calculate_total_cost(children.first, irp); 
+//                 newPop.push_back(children.first);
+//             }
+//             else {
+//                 children.first.fitness = LARGE_COST;
+//                 newPop.push_back(children.first);
+//             }
+            
+//             if (newPop.size() >= children_target_count) break;
+
+
+//             build_routes_for_individual(children.second, irp, aco_params);
+//             if(gen % 50 == 0)busca_local(children.second, irp, aco_params, false);
+//             check_feasibility(children.second, irp);
+            
+//             if (children.second.is_feasible) {
+//                 calculate_total_cost(children.second, irp); 
+//                 newPop.push_back(children.second);
+//             }
+//             else {
+//                 children.second.fitness = LARGE_COST;
+//                 newPop.push_back(children.second);
+//         }
+
+//         // 3. Geração de novas soluções
+//         while (newPop.size() < ga_params.popSize) {
+//             Individual ind = make_new_heuristic_individual(irp, aco_params);
+//             build_routes_for_individual(ind, irp, aco_params);
+//             if(gen % 50 == 0)busca_local(ind, irp, aco_params, false);
+
+//             check_feasibility(ind, irp);
+            
+//             if (ind.is_feasible) {
+//                 calculate_total_cost(ind, irp);
+//             } else {
+//                 ind.fitness = LARGE_COST;
+//             }
+//             newPop.push_back(ind);
+//         }
+        
+//         pop.swap(newPop);
+
+//         std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b){
+//             return a.fitness < b.fitness;
+//         });
+        
+//         if (pop.front().fitness < bestOverall.fitness) {
+//             bestOverall = pop.front();
+//         }
+        
+//         // Log da Geração
+//         double min_fit = pop.front().fitness;
+//         double avg_fit = 0.0;
+//         int feasible_count = 0;
+//         for(const auto& ind : pop) {
+//             if(ind.is_feasible) {
+//                 avg_fit += ind.fitness;
+//                 feasible_count++;
+//             }
+//         }
+//         if (feasible_count > 0) avg_fit /= feasible_count;
+        
+//         if (true) {
+//             std::cout << "Gen " << std::setw(4) << gen + 1 << "/" << ga_params.nGen
+//                       << " | Fact.: " << std::setw(3) << feasible_count << "/" << (int)pop.size()
+//                       << " | Melhor: " << std::fixed << std::setprecision(2) << min_fit
+//                       << " | Média(fact): " << avg_fit
+//                       << " | Global: " << bestOverall.fitness << std::endl;
+                      
+//         }
+//     }
+    
+// }  
+//     return bestOverall;
+// }
 
 
 
@@ -451,14 +581,15 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
     
     std::cout << "Inicializando população..." << std::endl;
     for (int i = 0; i < ga_params.popSize; ++i) {
-        Individual ind = make_new_heuristic_individual(irp, aco_params);
-        
+        Individual ind = make_new_heuristic_individual(irp);
         build_routes_for_individual(ind, irp, aco_params);
-       // busca_local(ind, irp, aco_params, false); 
         check_feasibility(ind, irp); 
         
         if (ind.is_feasible) {
             calculate_total_cost(ind, irp);
+            // --- EDUCAÇÃO (Busca Leve) ---
+            if (verbose) std::cout << "Educando (Leve) Indivíduo Inicial " << i << "...\n";
+            run_simple_reinsertion_search(ind, irp, aco_params, true); 
         } else {
             ind.fitness = LARGE_COST;
         }
@@ -473,9 +604,6 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
     
     std::cout << "\nIniciando loop do GA para " << ga_params.nGen << " gerações..." << std::endl;
     for (int gen = 0; gen < ga_params.nGen; ++gen) {
-        std::cout<<std::endl;
-        std::cout<<std::endl;
-        std::cout<<"Iniciando geração "<<gen+1<<std::endl;
         vector<Individual> newPop;
         newPop.reserve(ga_params.popSize);
 
@@ -484,13 +612,12 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
         for(int i = 0; i < num_elites && i < pop.size(); ++i) {
             newPop.push_back(pop[i]);
         }
-        std::cout<<"Elitismo completo com "<<num_elites<<" indivíduos."<<std::endl;
+
         // 2. Geração de Filhos
         int children_target_count = num_elites + (int)(ga_params.popSize * 0.70);
         int crossover_tries = 0; 
 
-        while (newPop.size() < children_target_count) {
-            std::cout<<"Gerando filhos: "<<newPop.size()+1<<" de "<<children_target_count<<std::endl;   
+        while (newPop.size() < children_target_count ) {
             Individual parent1 = tournamentSelect(pop, ga_params.tournamentK);
             Individual parent2 = tournamentSelect(pop, ga_params.tournamentK);
             
@@ -502,48 +629,40 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
             } else {
                 children = {parent1, parent2};
             }
-            
-            // --- Processa o Filho 1 ---
-            
+    
             build_routes_for_individual(children.first, irp, aco_params);
-            if(gen % 50 == 0)busca_local(children.first, irp, aco_params, false);
             check_feasibility(children.first, irp); 
             
             if (children.first.is_feasible) {
                 calculate_total_cost(children.first, irp); 
+                // --- EDUCAÇÃO (Busca Leve) ---
+                run_simple_reinsertion_search(children.first, irp, aco_params, true);
                 newPop.push_back(children.first);
             }
-            else {
-                children.first.fitness = LARGE_COST;
-                newPop.push_back(children.first);
-            }
-            
             if (newPop.size() >= children_target_count) break;
 
-
+            // --- Processa o Filho 2 ---
+            // advance_portion_mutation(children.second, irp, ga_params.pMutation);
             build_routes_for_individual(children.second, irp, aco_params);
-            if(gen % 50 == 0)busca_local(children.second, irp, aco_params, false);
             check_feasibility(children.second, irp);
             
             if (children.second.is_feasible) {
                 calculate_total_cost(children.second, irp); 
+                // --- EDUCAÇÃO (Busca Leve) ---
+                run_simple_reinsertion_search(children.second, irp, aco_params, true);
                 newPop.push_back(children.second);
             }
-            else {
-                children.second.fitness = LARGE_COST;
-                newPop.push_back(children.second);
         }
 
-        // 3. Geração de novas soluções
+        // 3. Geração de Imigrantes
         while (newPop.size() < ga_params.popSize) {
-            Individual ind = make_new_heuristic_individual(irp, aco_params);
+            Individual ind = make_new_heuristic_individual(irp);
             build_routes_for_individual(ind, irp, aco_params);
-            if(gen % 50 == 0)busca_local(ind, irp, aco_params, false);
-
             check_feasibility(ind, irp);
-            
             if (ind.is_feasible) {
                 calculate_total_cost(ind, irp);
+                // --- EDUCAÇÃO (Busca Leve) ---
+                run_simple_reinsertion_search(ind, irp, aco_params, true);
             } else {
                 ind.fitness = LARGE_COST;
             }
@@ -552,10 +671,26 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
         
         pop.swap(newPop);
 
+        // --- MUDANÇA: BUSCA LOCAL "PESADA" (a cada 100 gerações) ---
+        if (gen > 0 && gen % 100 == 0) {
+            if (verbose) {
+                std::cout << "\n--- EXECUTANDO BUSCA LOCAL PESADA (VND-DS) NA POPULAÇÃO ---\n";
+            }
+            for (Individual& ind : pop) {
+                if (ind.is_feasible) {
+                    // Chama a busca "pesada" (antiga 'sua_futura_busca_local')
+                    run_vnd_ds_operator(ind, irp, aco_params, false);
+                }
+            }
+            if (verbose) {
+                std::cout << "--- BUSCA PESADA CONCLUÍDA ---\n";
+            }
+        }
+        
+        // Ordena e atualiza o melhor
         std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b){
             return a.fitness < b.fitness;
         });
-        
         if (pop.front().fitness < bestOverall.fitness) {
             bestOverall = pop.front();
         }
@@ -565,26 +700,26 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
         double avg_fit = 0.0;
         int feasible_count = 0;
         for(const auto& ind : pop) {
-            if(ind.is_feasible) {
-                avg_fit += ind.fitness;
-                feasible_count++;
-            }
+            if(ind.is_feasible) { avg_fit += ind.fitness; feasible_count++; }
         }
         if (feasible_count > 0) avg_fit /= feasible_count;
         
-        if (true) {
+        if (verbose || (gen % 10 == 0) || (gen == ga_params.nGen - 1)) {
             std::cout << "Gen " << std::setw(4) << gen + 1 << "/" << ga_params.nGen
                       << " | Fact.: " << std::setw(3) << feasible_count << "/" << (int)pop.size()
                       << " | Melhor: " << std::fixed << std::setprecision(2) << min_fit
                       << " | Média(fact): " << avg_fit
-                      << " | Global: " << bestOverall.fitness << std::endl;
-                      
+                      << " | Global: " << bestOverall.fitness << "\n";
         }
     }
     
-}  
     return bestOverall;
 }
+
+
+
+
+
 
 
 

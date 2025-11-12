@@ -2,7 +2,7 @@
 
 # Parâmetros do Algoritmo Genético
 popSize = 50
-nGen = 1000
+nGen = 50
 pCrossover = 0.8
 pMutation = 0.08
 pLocalSearch = 0.25     
