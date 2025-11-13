@@ -1,0 +1,20 @@
+=== Resumo da solução ===
+Matriz de entregas da melhor solução:
+Matriz de entregas (linhas=periodos, colunas=clientes):
+6 0 10 0 10 0 0 0 12 14 0 0 5 12 0 0 8 0 19 0 0 18 10 9 0
+17 20 0 11 0 9 1 10 0 0 5 0 15 7 0 9 22 7 0 1 9 7 21 3 14
+0 0 11 0 12 0 14 0 21 0 18 16 0 4 16 0 0 0 0 15 9 0 0 8 0
+0 16 18 11 0 1 0 3 0 3 0 0 13 9 0 12 0 9 11 0 13 15 9 0 9
+11 0 0 0 4 9 5 5 0 4 13 0 0 5 0 0 0 0 0 11 0 0 14 13 18
+0 0 7 4 5 0 7 5 3 5 0 7 0 7 0 9 9 6 0 14 10 11 0 0 0
+
+--- Análise de Custos ---
+  Custo total roteamento: ................... 1806.00
+  Custo total armazenagem (clientes): ...... 90.48
+  Custo total armazenagem (depósito): ...... 0.00
+  Penalidade (Estoque Final > 0): .......... 0.00
+  --------------------------------------------------
+  Custo Total (Fitness Final): ............ 1896.48
+  Solução é FACTÍVEL
+  
+  

@@ -80,6 +80,71 @@ std::pair<Individual, Individual> two_point_crossover_customer(const Individual&
     return {child1, child2};
 }
 
+
+/*
+ * Crossover Baseado em Tempo (Adaptado de Zhao et al. 2025)
+ * Em vez de cortar a matriz verticalmente (por clientes),
+ * este operador corta horizontalmente (por dias).
+ * * Lógica:
+ * 1. Embaralha os dias.
+ * 2. Define pontos de corte.
+ * 3. Filho herda o "plano de entregas completo do dia" do Pai A ou Pai B.
+ */
+std::pair<Individual, Individual> crossover_time_based(const Individual& a, const Individual& b, const IRP& irp) {
+    Individual child1(irp.nPeriods, irp.nCustomers);
+    Individual child2(irp.nPeriods, irp.nCustomers);
+
+    // 1. Cria lista de dias e embaralha
+    std::vector<int> days(irp.nPeriods);
+    std::iota(days.begin(), days.end(), 0);
+    std::shuffle(days.begin(), days.end(), rng);
+
+    // 2. Define ponto de corte (vamos usar 1 ponto para simplificar, ou 2 como no artigo)
+    // Zhao usa 2 pontos para criar 3 zonas. Vamos replicar a lógica de 3 zonas.
+    int j1 = randint(0, irp.nPeriods);
+    int j2 = randint(0, irp.nPeriods);
+    if (j1 > j2) std::swap(j1, j2);
+
+    for (int idx = 0; idx < irp.nPeriods; ++idx) {
+        int t = days[idx]; // O dia real correspondente a este índice embaralhado
+
+        // Lógica de herança baseada nas zonas
+        // Zona 1 (idx < j1) ou Zona 3 (idx >= j2): Herança Direta
+        // Zona 2 (j1 <= idx < j2): Troca
+        
+        const Individual* source1_for_c1;
+        const Individual* source2_for_c1;
+        
+        if (idx < j1 || idx >= j2) {
+            // Zonas externas: Filho 1 herda de A, Filho 2 herda de B
+            source1_for_c1 = &a;
+            source2_for_c1 = &b;
+        } else {
+            // Zona interna: Inverte (Crossover)
+            source1_for_c1 = &b;
+            source2_for_c1 = &a;
+        }
+
+        // Copia o plano de entregas DO DIA INTEIRO
+        for (int c = 0; c < irp.nCustomers; ++c) {
+            child1.deliveries[t][c] = source1_for_c1->deliveries[t][c];
+            child2.deliveries[t][c] = source2_for_c1->deliveries[t][c];
+        }
+    }
+    
+    // Nota: A factibilidade de estoque (stock-out) pode ser quebrada aqui
+    // porque estamos misturando dias de planos diferentes.
+    // O pipeline do GA (check_feasibility -> discard) cuidará disso,
+    // mas este crossover pode ter taxa de rejeição mais alta que os outros.
+    
+    return {child1, child2};
+}
+
+
+
+
+
+
 Individual tournamentSelect(const vector<Individual>& pop, int k) {
     int n = pop.size();
     int best_idx = randint(0, n - 1);
@@ -623,12 +688,17 @@ Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, con
             
             std::pair<Individual, Individual> children;
             if (randreal() < ga_params.pCrossover) {
-                children = (randreal() < 0.5) ? 
-                           one_point_crossover_customer(parent1, parent2, irp) :
-                           two_point_crossover_customer(parent1, parent2, irp);
-            } else {
-                children = {parent1, parent2};
-            }
+                            double r = randreal();
+                            if (r < 0.33) {
+                                children = one_point_crossover_customer(parent1, parent2, irp);
+                            } else if (r < 0.66) {
+                                children = two_point_crossover_customer(parent1, parent2, irp);
+                            } else {
+                                children = crossover_time_based(parent1, parent2, irp);
+                            }
+                        } else {
+                            children = {parent1, parent2};
+                        }
     
             build_routes_for_individual(children.first, irp, aco_params);
             check_feasibility(children.first, irp); 
