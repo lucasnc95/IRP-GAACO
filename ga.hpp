@@ -40,4 +40,18 @@ void exportAndPlotRoutes(
 void build_routes_for_individual(Individual& ind, const IRP& irp, const ACO_Params& aco_params);
 // --- FIM DA NOVA FUNÇÃO ---
 
+double calculate_diversity_distance(const Individual& a, const Individual& b, int nCustomers, int nPeriods);
+
+/**
+ * @brief Atualiza o Biased Fitness de toda a população.
+ * Calcula ranks de custo e diversidade.
+ */
+void update_biased_fitness(std::vector<Individual>& pop, int nCustomers, int nPeriods, int num_elites);
+
+/**
+ * @brief Remove os piores indivíduos (baseado em Biased Fitness)
+ * até que a população tenha o tamanho alvo. Remove clones primeiro.
+ */
+void select_survivors(std::vector<Individual>& pop, int target_size, int nCustomers, int nPeriods, int num_elites);
+
 #endif // GA_HPP

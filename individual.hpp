@@ -1,56 +1,48 @@
 /*
  * ARQUIVO MODIFICADO: individual.hpp
- * Atualiza a struct Individual para usar a nova struct Route.
+ *
+ * Adicionados campos para suportar o mecanismo de Biased Fitness (HGS).
  */
 #ifndef INDIVIDUAL_HPP
 #define INDIVIDUAL_HPP
 
 #include <vector>
-#include <map> // Necessário para std::map
-#include "route.hpp" // <-- MUDANÇA: Inclui a nova struct de Rota
+#include "route.hpp"
 
 struct Individual {
-    // A genética: O plano de entregas
     std::vector<std::vector<int>> deliveries;
-
-    // --- A solução decodificada e seus custos (preenchidos pela avaliação) ---
-    
-    // <-- MUDANÇA: A representação das rotas foi alterada
-    std::vector<std::vector<Route>> routes_per_period; 
+    std::vector<std::vector<Route>> routes_per_period;
     
     double routing_cost;
     double customer_holding_cost;
     double depot_holding_cost;
     double final_inventory_penalty;
-    double fitness;
+    double fitness; // Custo total (penalizado se infactível)
     bool is_feasible;
 
-    // --- NOVAS MATRIZES AUXILIARES ---
-    // Matriz de entrega mínima para garantir a demanda (preenchida pelo reparo/avaliação)
-    std::vector<std::vector<int>> min_delivery_matrix;
-    
-    // Matriz de inventário final (após entrega e demanda)
-    std::vector<std::vector<long>> final_inventory_matrix;
+    // --- NOVOS CAMPOS PARA SELEÇÃO DE SOBREVIVENTES (HGS) ---
+    double diversity_contribution; // Distância média para os vizinhos mais próximos
+    int rank_cost;                 // Classificação baseada apenas no custo (0 = melhor)
+    int rank_diversity;            // Classificação baseada na diversidade (0 = mais diverso)
+    double biased_fitness;         // Fitness combinado (Custo + Diversidade)
 
-
-    // Construtor para inicializar com o tamanho correto e valores padrão
+    // Construtor
     Individual(int nPeriods = 0, int nCustomers = 0) {
         deliveries.assign(nPeriods, std::vector<int>(nCustomers, 0));
+        routes_per_period.resize(nPeriods);
         
-        // <-- MUDANÇA: Redimensiona o vetor externo de rotas
-        routes_per_period.resize(nPeriods); 
-
-        // <-- MUDANÇA: Inicializa as novas matrizes com o tamanho correto
-        min_delivery_matrix.assign(nPeriods, std::vector<int>(nCustomers, 0));
-        final_inventory_matrix.assign(nPeriods, std::vector<long>(nCustomers, 0));
-
-        // Inicializa custos com -1 para indicar que não foi avaliado
-        routing_cost = -1.0;
-        customer_holding_cost = -1.0;
-        depot_holding_cost = -1.0;
-        final_inventory_penalty = -1.0;
-        fitness = -1.0;
+        routing_cost = 0.0;
+        customer_holding_cost = 0.0;
+        depot_holding_cost = 0.0;
+        final_inventory_penalty = 0.0;
+        fitness = 1e18;
         is_feasible = false;
+
+        // Inicializa novos campos
+        diversity_contribution = 0.0;
+        rank_cost = 0;
+        rank_diversity = 0;
+        biased_fitness = 0.0;
     }
 };
 

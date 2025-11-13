@@ -242,60 +242,60 @@ Individual tournamentSelect(const vector<Individual>& pop, int k) {
 
 
 
-Individual make_new_heuristic_individual(const IRP& irp) {
-    Individual ind(irp.nPeriods, irp.nCustomers);
-    vector<long> current_inv(irp.nCustomers);
-    for(int i = 0; i < irp.nCustomers; ++i) current_inv[i] = irp.customers[i].initialInv;
+// Individual make_new_heuristic_individual(const IRP& irp) {
+//     Individual ind(irp.nPeriods, irp.nCustomers);
+//     vector<long> current_inv(irp.nCustomers);
+//     for(int i = 0; i < irp.nCustomers; ++i) current_inv[i] = irp.customers[i].initialInv;
 
-    long fleet_capacity = (long)irp.nVehicles * irp.Capacity;
+//     long fleet_capacity = (long)irp.nVehicles * irp.Capacity;
 
-    for (int t = 0; t < irp.nPeriods; ++t) {
-        long period_load = 0;
-        vector<int> mandatory_custs, optional_custs;
+//     for (int t = 0; t < irp.nPeriods; ++t) {
+//         long period_load = 0;
+//         vector<int> mandatory_custs, optional_custs;
 
-        for (int c = 0; c < irp.nCustomers; ++c) {
-            if (current_inv[c] < irp.customers[c].demand[t]) {
-                mandatory_custs.push_back(c);
-            } else {
-                optional_custs.push_back(c);
-            }
-        }
+//         for (int c = 0; c < irp.nCustomers; ++c) {
+//             if (current_inv[c] < irp.customers[c].demand[t]) {
+//                 mandatory_custs.push_back(c);
+//             } else {
+//                 optional_custs.push_back(c);
+//             }
+//         }
 
-        // Atende clientes obrigatórios
-        for (int c : mandatory_custs) {
-            long needed = irp.customers[c].demand[t] - current_inv[c];
-            long space = irp.customers[c].maxLevelInv - (current_inv[c] + needed);
-            int extra = (space > 0) ? randint(0, std::min((long)20, space)) : 0; // Adiciona um extra aleatório pequeno
-            int q = std::min((long)irp.Capacity, needed + extra);
+//         // Atende clientes obrigatórios
+//         for (int c : mandatory_custs) {
+//             long needed = irp.customers[c].demand[t] - current_inv[c];
+//             long space = irp.customers[c].maxLevelInv - (current_inv[c] + needed);
+//             int extra = (space > 0) ? randint(0, std::min((long)20, space)) : 0; // Adiciona um extra aleatório pequeno
+//             int q = std::min((long)irp.Capacity, needed + extra);
             
-            if (period_load + q <= fleet_capacity) {
-                ind.deliveries[t][c] = q;
-                period_load += q;
-            }
-        }
+//             if (period_load + q <= fleet_capacity) {
+//                 ind.deliveries[t][c] = q;
+//                 period_load += q;
+//             }
+//         }
         
-        // Atende clientes opcionais aleatoriamente
-        std::shuffle(optional_custs.begin(), optional_custs.end(), rng);
-        for (int c : optional_custs) {
-            if (period_load >= fleet_capacity) break;
-            if (randreal() < 0.3) { // Chance de atender um cliente opcional
-                long space = irp.customers[c].maxLevelInv - current_inv[c];
-                long max_q = std::min({space, (long)irp.Capacity, fleet_capacity - period_load});
-                if (max_q > 0) {
-                    int q = randint(1, max_q);
-                    ind.deliveries[t][c] = q;
-                    period_load += q;
-                }
-            }
-        }
+//         // Atende clientes opcionais aleatoriamente
+//         std::shuffle(optional_custs.begin(), optional_custs.end(), rng);
+//         for (int c : optional_custs) {
+//             if (period_load >= fleet_capacity) break;
+//             if (randreal() < 0.3) { // Chance de atender um cliente opcional
+//                 long space = irp.customers[c].maxLevelInv - current_inv[c];
+//                 long max_q = std::min({space, (long)irp.Capacity, fleet_capacity - period_load});
+//                 if (max_q > 0) {
+//                     int q = randint(1, max_q);
+//                     ind.deliveries[t][c] = q;
+//                     period_load += q;
+//                 }
+//             }
+//         }
 
-        // Atualiza o inventário para o próximo período
-        for (int c = 0; c < irp.nCustomers; ++c) {
-            current_inv[c] += (long)ind.deliveries[t][c] - irp.customers[c].demand[t];
-        }
-    }
-    return ind;
-}
+//         // Atualiza o inventário para o próximo período
+//         for (int c = 0; c < irp.nCustomers; ++c) {
+//             current_inv[c] += (long)ind.deliveries[t][c] - irp.customers[c].demand[t];
+//         }
+//     }
+//     return ind;
+// }
 
 
 // void build_routes_for_individual(Individual& ind, const IRP& irp, const ACO_Params& aco_params) {
@@ -351,7 +351,9 @@ Individual make_new_heuristic_individual(const IRP& irp, const ACO_Params& aco_p
     Individual ind(irp.nPeriods, irp.nCustomers);
     
     // --- PASSO 1: Sortear 20% dos clientes para reservar ---
-    int num_reserved = static_cast<int>(irp.nCustomers * 1);
+    // int num_reserved = static_cast<int>(irp.nCustomers * 1);
+    double removal_rate = 0.10 + (randreal() * 0.40); // 0.10 a 0.50
+    int num_reserved = static_cast<int>(irp.nCustomers * removal_rate);
     if (num_reserved == 0 && irp.nCustomers > 0) num_reserved = 1; // Garante pelo menos 1
     
     vector<int> customer_indices(irp.nCustomers);
@@ -638,158 +640,157 @@ Individual make_new_heuristic_individual(const IRP& irp, const ACO_Params& aco_p
 
 
 
-Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, const ACO_Params& aco_params, bool verbose) {
+// Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, const ACO_Params& aco_params, bool verbose) {
     
-    const double LARGE_COST = 1e18;
-    vector<Individual> pop;
-    pop.reserve(ga_params.popSize);
+//     const double LARGE_COST = 1e18;
+//     vector<Individual> pop;
+//     pop.reserve(ga_params.popSize);
     
-    std::cout << "Inicializando população..." << std::endl;
-    for (int i = 0; i < ga_params.popSize; ++i) {
-        Individual ind = make_new_heuristic_individual(irp);
-        build_routes_for_individual(ind, irp, aco_params);
-        check_feasibility(ind, irp); 
+//     std::cout << "Inicializando população..." << std::endl;
+//     for (int i = 0; i < ga_params.popSize; ++i) {
+//         Individual ind = make_new_heuristic_individual(irp);
+//         build_routes_for_individual(ind, irp, aco_params);
+//         check_feasibility(ind, irp); 
         
-        if (ind.is_feasible) {
-            calculate_total_cost(ind, irp);
-            // --- EDUCAÇÃO (Busca Leve) ---
-            if (verbose) std::cout << "Educando (Leve) Indivíduo Inicial " << i << "...\n";
-            run_simple_reinsertion_search(ind, irp, aco_params, true); 
-        } else {
-            ind.fitness = LARGE_COST;
-        }
-        pop.push_back(ind);
-    }
-    std::cout << "População inicial educada e avaliada." << std::endl;
+//         if (ind.is_feasible) {
+//             calculate_total_cost(ind, irp);
+//             // --- EDUCAÇÃO (Busca Leve) ---
+//             if (verbose) std::cout << "Educando (Leve) Indivíduo Inicial " << i << "...\n";
+//             run_simple_reinsertion_search(ind, irp, aco_params, true); 
+//         } else {
+//             ind.fitness = LARGE_COST;
+//         }
+//         pop.push_back(ind);
+//     }
+//     std::cout << "População inicial educada e avaliada." << std::endl;
     
-    std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b){
-        return a.fitness < b.fitness;
-    });
-    Individual bestOverall = pop.front();
+//     std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b){
+//         return a.fitness < b.fitness;
+//     });
+//     Individual bestOverall = pop.front();
     
-    std::cout << "\nIniciando loop do GA para " << ga_params.nGen << " gerações..." << std::endl;
-    for (int gen = 0; gen < ga_params.nGen; ++gen) {
-        vector<Individual> newPop;
-        newPop.reserve(ga_params.popSize);
+//     std::cout << "\nIniciando loop do GA para " << ga_params.nGen << " gerações..." << std::endl;
+//     for (int gen = 0; gen < ga_params.nGen; ++gen) {
+//         vector<Individual> newPop;
+//         newPop.reserve(ga_params.popSize);
 
-        // 1. Elitismo
-        int num_elites = (int)(ga_params.popSize * 0.10);
-        for(int i = 0; i < num_elites && i < pop.size(); ++i) {
-            newPop.push_back(pop[i]);
-        }
+//         // 1. Elitismo
+//         std::cout<<"Elitismo"<<std::endl;
+//         int num_elites = (int)(ga_params.popSize * 0.10);
+//         for(int i = 0; i < num_elites && i < pop.size(); ++i) {
+//             newPop.push_back(pop[i]);
+//         }
+//         std::cout<<"Elitismo finalizado para geração "<<gen<<std::endl;
 
-        // 2. Geração de Filhos
-        int children_target_count = num_elites + (int)(ga_params.popSize * 0.70);
-        int crossover_tries = 0; 
+//         // 2. Geração de Filhos
+//         int children_target_count = num_elites + (int)(ga_params.popSize * 0.70);
+//         int crossover_tries = 0; 
+//         std::cout<<"Crossover"<<std::endl;
 
-        while (newPop.size() < children_target_count ) {
-            Individual parent1 = tournamentSelect(pop, ga_params.tournamentK);
-            Individual parent2 = tournamentSelect(pop, ga_params.tournamentK);
+//         while (newPop.size() < children_target_count ) {
+//             Individual parent1 = tournamentSelect(pop, ga_params.tournamentK);
+//             Individual parent2 = tournamentSelect(pop, ga_params.tournamentK);
             
-            std::pair<Individual, Individual> children;
-            if (randreal() < ga_params.pCrossover) {
-                            double r = randreal();
-                            if (r < 0.33) {
-                                children = one_point_crossover_customer(parent1, parent2, irp);
-                            } else if (r < 0.66) {
-                                children = two_point_crossover_customer(parent1, parent2, irp);
-                            } else {
-                                children = crossover_time_based(parent1, parent2, irp);
-                            }
-                        } else {
-                            children = {parent1, parent2};
-                        }
+//             std::pair<Individual, Individual> children;
+//             if (randreal() < ga_params.pCrossover) {
+//                             double r = randreal();
+//                             if (r < 0.33) {
+//                                 children = one_point_crossover_customer(parent1, parent2, irp);
+//                             } else if (r < 0.66) {
+//                                 children = two_point_crossover_customer(parent1, parent2, irp);
+//                             } else {
+//                                 children = crossover_time_based(parent1, parent2, irp);
+//                             }
+//                         } else {
+//                             children = {parent1, parent2};
+//                         }
     
-            build_routes_for_individual(children.first, irp, aco_params);
-            check_feasibility(children.first, irp); 
+//             build_routes_for_individual(children.first, irp, aco_params);
+//             check_feasibility(children.first, irp); 
+//             std::cout<<"Filho 1"<<std::endl;
+
+//             if (children.first.is_feasible) {
+//                 calculate_total_cost(children.first, irp); 
+//                 // --- EDUCAÇÃO (Busca Leve) ---
+//                 run_simple_reinsertion_search(children.first, irp, aco_params, true);
+//                 newPop.push_back(children.first);
+//             }
+//             if (newPop.size() >= children_target_count) break;
+
+//             // --- Processa o Filho 2 ---
+//             // advance_portion_mutation(children.second, irp, ga_params.pMutation);
+//             build_routes_for_individual(children.second, irp, aco_params);
+//             check_feasibility(children.second, irp);
             
-            if (children.first.is_feasible) {
-                calculate_total_cost(children.first, irp); 
-                // --- EDUCAÇÃO (Busca Leve) ---
-                run_simple_reinsertion_search(children.first, irp, aco_params, true);
-                newPop.push_back(children.first);
-            }
-            if (newPop.size() >= children_target_count) break;
+//             if (children.second.is_feasible) {
+//                 calculate_total_cost(children.second, irp); 
+//                 // --- EDUCAÇÃO (Busca Leve) ---
+//                 run_simple_reinsertion_search(children.second, irp, aco_params, true);
+//                 newPop.push_back(children.second);
+//             }
+//         }
+//         std::cout<<"Filho 2"<<std::endl;
+//         // 3. Geração de Imigrantes
+//         while (newPop.size() < ga_params.popSize) {
+//             Individual ind = make_new_heuristic_individual(irp);
+//             build_routes_for_individual(ind, irp, aco_params);
+//             check_feasibility(ind, irp);
+//             if (ind.is_feasible) {
+//                 calculate_total_cost(ind, irp);
+//                 // --- EDUCAÇÃO (Busca Leve) ---
+//                 run_simple_reinsertion_search(ind, irp, aco_params, true);
+//             } else {
+//                 ind.fitness = LARGE_COST;
+//             }
+//             newPop.push_back(ind);
+//         }
+        
+//         pop.swap(newPop);
 
-            // --- Processa o Filho 2 ---
-            // advance_portion_mutation(children.second, irp, ga_params.pMutation);
-            build_routes_for_individual(children.second, irp, aco_params);
-            check_feasibility(children.second, irp);
-            
-            if (children.second.is_feasible) {
-                calculate_total_cost(children.second, irp); 
-                // --- EDUCAÇÃO (Busca Leve) ---
-                run_simple_reinsertion_search(children.second, irp, aco_params, true);
-                newPop.push_back(children.second);
-            }
-        }
-
-        // 3. Geração de Imigrantes
-        while (newPop.size() < ga_params.popSize) {
-            Individual ind = make_new_heuristic_individual(irp);
-            build_routes_for_individual(ind, irp, aco_params);
-            check_feasibility(ind, irp);
-            if (ind.is_feasible) {
-                calculate_total_cost(ind, irp);
-                // --- EDUCAÇÃO (Busca Leve) ---
-                run_simple_reinsertion_search(ind, irp, aco_params, true);
-            } else {
-                ind.fitness = LARGE_COST;
-            }
-            newPop.push_back(ind);
-        }
+//         // --- MUDANÇA: BUSCA LOCAL "PESADA" (a cada 100 gerações) ---
+//         if (gen > 0 && gen % 100 == 0) {
+//             if (verbose) {
+//                 std::cout << "\n--- EXECUTANDO BUSCA LOCAL PESADA (VND-DS) NA POPULAÇÃO ---\n";
+//             }
+//             for (Individual& ind : pop) {
+//                 if (ind.is_feasible) {
+//                     // Chama a busca "pesada" (antiga 'sua_futura_busca_local')
+//                     run_vnd_ds_operator(ind, irp, aco_params, false);
+//                 }
+//             }
+//             if (verbose) {
+//                 std::cout << "--- BUSCA PESADA CONCLUÍDA ---\n";
+//             }
+//         }
         
-        pop.swap(newPop);
-
-        // --- MUDANÇA: BUSCA LOCAL "PESADA" (a cada 100 gerações) ---
-        if (gen > 0 && gen % 100 == 0) {
-            if (verbose) {
-                std::cout << "\n--- EXECUTANDO BUSCA LOCAL PESADA (VND-DS) NA POPULAÇÃO ---\n";
-            }
-            for (Individual& ind : pop) {
-                if (ind.is_feasible) {
-                    // Chama a busca "pesada" (antiga 'sua_futura_busca_local')
-                    run_vnd_ds_operator(ind, irp, aco_params, false);
-                }
-            }
-            if (verbose) {
-                std::cout << "--- BUSCA PESADA CONCLUÍDA ---\n";
-            }
-        }
+//         // Ordena e atualiza o melhor
+//         std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b){
+//             return a.fitness < b.fitness;
+//         });
+//         if (pop.front().fitness < bestOverall.fitness) {
+//             bestOverall = pop.front();
+//         }
         
-        // Ordena e atualiza o melhor
-        std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b){
-            return a.fitness < b.fitness;
-        });
-        if (pop.front().fitness < bestOverall.fitness) {
-            bestOverall = pop.front();
-        }
+//         // Log da Geração
+//         double min_fit = pop.front().fitness;
+//         double avg_fit = 0.0;
+//         int feasible_count = 0;
+//         for(const auto& ind : pop) {
+//             if(ind.is_feasible) { avg_fit += ind.fitness; feasible_count++; }
+//         }
+//         if (feasible_count > 0) avg_fit /= feasible_count;
         
-        // Log da Geração
-        double min_fit = pop.front().fitness;
-        double avg_fit = 0.0;
-        int feasible_count = 0;
-        for(const auto& ind : pop) {
-            if(ind.is_feasible) { avg_fit += ind.fitness; feasible_count++; }
-        }
-        if (feasible_count > 0) avg_fit /= feasible_count;
-        
-        if (verbose || (gen % 10 == 0) || (gen == ga_params.nGen - 1)) {
-            std::cout << "Gen " << std::setw(4) << gen + 1 << "/" << ga_params.nGen
-                      << " | Fact.: " << std::setw(3) << feasible_count << "/" << (int)pop.size()
-                      << " | Melhor: " << std::fixed << std::setprecision(2) << min_fit
-                      << " | Média(fact): " << avg_fit
-                      << " | Global: " << bestOverall.fitness << "\n";
-        }
-    }
+//         if (verbose || (gen % 10 == 0) || (gen == ga_params.nGen - 1)) {
+//             std::cout << "Gen " << std::setw(4) << gen + 1 << "/" << ga_params.nGen
+//                       << " | Fact.: " << std::setw(3) << feasible_count << "/" << (int)pop.size()
+//                       << " | Melhor: " << std::fixed << std::setprecision(2) << min_fit
+//                       << " | Média(fact): " << avg_fit
+//                       << " | Global: " << bestOverall.fitness << "\n";
+//         }
+//     }
     
-    return bestOverall;
-}
-
-
-
-
-
+//     return bestOverall;
+// }
 
 
 
@@ -852,3 +853,611 @@ void exportAndPlotRoutes(
     std::system(cmd.str().c_str());
 }
 
+/**
+ * @brief Calcula a distância de diversidade (Eq. 21 Zhao et al. 2025)
+ * Delta(P1, P2) = (1/n) * sum( 1 se padroes de visita diferem )
+ */
+double calculate_diversity_distance(const Individual& a, const Individual& b, int nCustomers, int nPeriods) {
+    double diff_count = 0.0;
+
+    for (int c = 0; c < nCustomers; ++c) {
+        bool pattern_differs = false;
+        for (int t = 0; t < nPeriods; ++t) {
+            // Verifica se o status de visita (tem entrega ou não) é diferente
+            bool visit_a = (a.deliveries[t][c] > 0);
+            bool visit_b = (b.deliveries[t][c] > 0);
+            
+            if (visit_a != visit_b) {
+                pattern_differs = true;
+                break; // Basta um dia diferente para o padrão ser diferente
+            }
+        }
+        if (pattern_differs) {
+            diff_count += 1.0;
+        }
+    }
+    return diff_count / (double)nCustomers;
+}
+
+/**
+ * @brief Atualiza os ranks e o Biased Fitness da população.
+ */
+void update_biased_fitness(std::vector<Individual>& pop, int nCustomers, int nPeriods, int num_elites) {
+    int pop_size = pop.size();
+    if (pop_size == 0) return;
+
+    // 1. RANK DE CUSTO
+    // Ordena por custo (menor é melhor)
+    std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b) {
+        return a.fitness < b.fitness;
+    });
+    // Atribui rank de custo (0..N-1)
+    for (int i = 0; i < pop_size; ++i) {
+        pop[i].rank_cost = i;
+    }
+
+    // 2. RANK DE DIVERSIDADE
+    // Calcula a distância média de cada indivíduo para os outros
+    // (No HGS original, usa-se os k vizinhos mais próximos, aqui usamos média geral para simplificar
+    // ou podemos usar os 50% mais próximos para ser mais fiel ao Vidal 2012)
+    int n_closest = std::max(1, pop_size / 2); 
+
+    for (int i = 0; i < pop_size; ++i) {
+        std::vector<double> distances;
+        distances.reserve(pop_size);
+        for (int j = 0; j < pop_size; ++j) {
+            if (i == j) continue;
+            distances.push_back(calculate_diversity_distance(pop[i], pop[j], nCustomers, nPeriods));
+        }
+        // Pega a média dos n_closest mais próximos (menor distância = menos diverso)
+        std::sort(distances.begin(), distances.end()); // Crescente
+        double sum_dist = 0.0;
+        for(int k=0; k < std::min((int)distances.size(), n_closest); ++k) {
+            sum_dist += distances[k];
+        }
+        pop[i].diversity_contribution = (distances.empty()) ? 0.0 : (sum_dist / n_closest);
+    }
+
+    // Ordena por diversidade (MAIOR distância é melhor/mais diverso -> rank menor)
+    // Queremos rank 0 para o mais diverso.
+    std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b) {
+        return a.diversity_contribution > b.diversity_contribution; // Decrescente
+    });
+    for (int i = 0; i < pop_size; ++i) {
+        pop[i].rank_diversity = i;
+    }
+
+    // 3. BIASED FITNESS
+    // BF = RankCost + (1 - nbElites/popSize) * RankDiversity
+    // (Fórmula padrão HGS para equilibrar os dois objetivos)
+    double w_div = 1.0 - ((double)num_elites / (double)pop_size);
+    
+    for (int i = 0; i < pop_size; ++i) {
+        pop[i].biased_fitness = (double)pop[i].rank_cost + w_div * (double)pop[i].rank_diversity;
+    }
+}
+
+/**
+ * @brief Seleciona sobreviventes removendo os piores até atingir target_size.
+ * Remove clones primeiro.
+ */
+void select_survivors(std::vector<Individual>& pop, int target_size, int nCustomers, int nPeriods, int num_elites) {
+    
+    // 1. Remove Clones (Soluções com distância 0 e mesmo custo)
+    // Isso é crucial para evitar estagnação.
+    bool clone_found = true;
+    while (pop.size() > target_size && clone_found) {
+        clone_found = false;
+        update_biased_fitness(pop, nCustomers, nPeriods, num_elites);
+        
+        // Ordena por Biased Fitness (piores no final) para facilitar remoção,
+        // mas mantendo o melhor custo protegido (rank_cost = 0 sempre sobrevive na lógica de sort do HGS,
+        // mas aqui vamos garantir explicitamente).
+        std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b) {
+            return a.biased_fitness < b.biased_fitness; 
+        });
+
+        // Procura clones. Se achar, remove o que tiver pior biased fitness (o que está mais pro fim)
+        // Compara todos com todos é O(N^2), ok para N=100.
+        for (int i = pop.size() - 1; i >= 1; --i) {
+            for (int j = 0; j < i; ++j) {
+                if (std::abs(pop[i].fitness - pop[j].fitness) < 1e-4) { // Mesmo custo
+                    if (calculate_diversity_distance(pop[i], pop[j], nCustomers, nPeriods) < 1e-9) {
+                        // É clone. Remove 'i' (que tem pior ou igual biased fitness)
+                        pop.erase(pop.begin() + i);
+                        clone_found = true;
+                        goto end_clone_search;
+                    }
+                }
+            }
+        }
+        end_clone_search:;
+    }
+
+    // 2. Remove por Biased Fitness (Piores Indivíduos)
+    while (pop.size() > target_size) {
+        update_biased_fitness(pop, nCustomers, nPeriods, num_elites);
+        
+        // Ordena: Menor Biased Fitness (Melhor) -> Maior Biased Fitness (Pior)
+        std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b) {
+            return a.biased_fitness < b.biased_fitness;
+        });
+
+        // Remove o último (o pior), DESDE QUE não seja o melhor custo absoluto
+        // (O melhor custo terá rank_cost=0, então dificilmente terá BF alto, mas por segurança)
+        if (pop.back().rank_cost == 0) {
+            // Caso patológico extremo onde o melhor custo é o pior em diversidade e a população é pequena.
+            // Remove o penúltimo.
+            pop.erase(pop.end() - 2);
+        } else {
+            pop.erase(pop.end() - 1);
+        }
+    }
+}
+
+
+// Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, const ACO_Params& aco_params, bool verbose) {
+    
+//     const double LARGE_COST = 1e18;
+//     vector<Individual> pop;
+//     pop.reserve(ga_params.popSize * 2); // Reserva espaço extra para crescimento
+    
+//     // --- 1. INICIALIZAÇÃO (COM DIVERSIDADE) ---
+//     std::cout << "Inicializando população..." << std::endl;
+//     int initial_pop_size = ga_params.popSize; 
+    
+//     for (int i = 0; i < initial_pop_size; ++i) {
+//         // Cria indivíduo "cru" com diversidade estrutural (10-50% removido)
+//         Individual ind = make_new_heuristic_individual(irp, aco_params);
+        
+//         // Constrói rotas base
+//         build_routes_for_individual(ind, irp, aco_params);
+//         check_feasibility(ind, irp); 
+        
+//         if (ind.is_feasible) {
+//             calculate_total_cost(ind, irp);
+//             // MUDANÇA: NÃO aplica busca local aqui para manter diversidade inicial alta
+//             // (Ou aplica uma busca MUITO leve se necessário, mas 'cru' é melhor para diversidade)
+//         } else {
+//             ind.fitness = LARGE_COST;
+//         }
+        
+//         // Garante que só entram factíveis (ou tenta de novo)
+//         if (ind.is_feasible) {
+//             pop.push_back(ind);
+//         } else {
+//             i--; 
+//         }
+//         if (i % 10 == 0 && i > 0) std::cout << "." << std::flush;
+//     }
+//     std::cout << "\nPopulação inicial gerada." << std::endl;
+
+//     // Encontra o melhor inicial
+//     Individual bestOverall = pop[0];
+//     for(const auto& ind : pop) if(ind.fitness < bestOverall.fitness) bestOverall = ind;
+
+//     int num_elites = (int)(ga_params.popSize * 0.10); // Para cálculo do Biased Fitness
+
+//     // --- 2. LOOP EVOLUCIONÁRIO (HGS) ---
+//     std::cout << "\nIniciando loop do GA (HGS) para " << ga_params.nGen << " iterações..." << std::endl;
+    
+//     for (int gen = 0; gen < ga_params.nGen; ++gen) {
+        
+//         // a) Atualiza métricas de população (Ranks e Biased Fitness)
+//         update_biased_fitness(pop, irp.nCustomers, irp.nPeriods, num_elites);
+
+//         // b) Seleção de Pais (Torneio Binário via Biased Fitness)
+//         int idx1 = randint(0, pop.size() - 1);
+//         int idx2 = randint(0, pop.size() - 1);
+//         const Individual& p1 = (pop[idx1].biased_fitness < pop[idx2].biased_fitness) ? pop[idx1] : pop[idx2];
+        
+//         idx1 = randint(0, pop.size() - 1);
+//         idx2 = randint(0, pop.size() - 1);
+//         const Individual& p2 = (pop[idx1].biased_fitness < pop[idx2].biased_fitness) ? pop[idx1] : pop[idx2];
+
+//         // c) Crossover (Misto)
+//         std::pair<Individual, Individual> children;
+//         if (randreal() < ga_params.pCrossover) {
+//             double r = randreal();
+//             if (r < 0.33) {
+//                 children = one_point_crossover_customer(p1, p2, irp);
+//             } else if (r < 0.66) {
+//                 children = two_point_crossover_customer(p1, p2, irp);
+//             } else {
+//                 // Novo Crossover Temporal (Zhao et al.)
+//                 children = crossover_time_based(p1, p2, irp);
+//             }
+//         } else {
+//             children = {p1, p2};
+//         }
+
+//         // d) Processamento do Filho 1 (Educação e Inserção)
+//         build_routes_for_individual(children.first, irp, aco_params);
+//         check_feasibility(children.first, irp);
+//         if (children.first.is_feasible) {
+//             calculate_total_cost(children.first, irp);
+            
+//             // Educação Leve (Sempre aplica nos filhos para garantir qualidade local)
+//             run_simple_reinsertion_search(children.first, irp, aco_params, false); 
+            
+//             if (children.first.fitness < bestOverall.fitness) {
+//                 bestOverall = children.first;
+//                 std::cout << ">>> Nova Melhor Solução (Filho 1): " << std::fixed << std::setprecision(2) << bestOverall.fitness << "\n";
+//             }
+//             pop.push_back(children.first); // População cresce temporariamente
+//         }
+
+//         // e) Processamento do Filho 2
+//         build_routes_for_individual(children.second, irp, aco_params);
+//         check_feasibility(children.second, irp);
+//         if (children.second.is_feasible) {
+//             calculate_total_cost(children.second, irp);
+            
+//             run_simple_reinsertion_search(children.second, irp, aco_params, false);
+            
+//             if (children.second.fitness < bestOverall.fitness) {
+//                 bestOverall = children.second;
+//                 std::cout << ">>> Nova Melhor Solução (Filho 2): " << std::fixed << std::setprecision(2) << bestOverall.fitness << "\n";
+//             }
+//             pop.push_back(children.second);
+//         }
+
+//         // f) Seleção de Sobreviventes (Corte da População)
+//         // Mantém tamanho constante removendo clones e piores (Biased Fitness)
+//         if (pop.size() > ga_params.popSize) {
+//             select_survivors(pop, ga_params.popSize, irp.nCustomers, irp.nPeriods, num_elites);
+//         }
+
+//         // g) Busca Local Pesada (VND-DS) / Shaking
+//         // A cada 100 gerações, aplica a busca pesada (com Sweep) na elite
+//         if (gen > 0 && gen % 100 == 0) {
+//             if (verbose) std::cout << "\n--- Gen " << gen << ": Executando Busca Pesada (VND-DS) na Elite ---\n";
+            
+//             // Reordena por custo puro para pegar a elite verdadeira
+//             std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b){
+//                 return a.fitness < b.fitness;
+//             });
+
+//             // Aplica nos Top 5
+//             for(int i=0; i<std::min((int)pop.size(), 5); ++i) {
+//                 run_vnd_ds_operator(pop[i], irp, aco_params, false);
+//                 if (pop[i].fitness < bestOverall.fitness) {
+//                     bestOverall = pop[i];
+//                     std::cout << ">>> Nova Melhor Solução (Busca Pesada): " << bestOverall.fitness << "\n";
+//                 }
+//             }
+//         }
+
+//         // Log periódico
+//         if (verbose || (gen % 50 == 0) || gen == ga_params.nGen - 1) {
+//             double avg_fit = 0.0;
+//             for(const auto& ind : pop) avg_fit += ind.fitness;
+//             avg_fit /= pop.size();
+            
+//             std::cout << "Gen " << std::setw(4) << gen 
+//                       << " | Pop: " << pop.size()
+//                       << " | Melhor: " << std::fixed << std::setprecision(2) << bestOverall.fitness
+//                       << " | Média: " << avg_fit << "\n";
+//         }
+//     }
+    
+//     // Análise final na melhor solução (com verbose)
+//     std::cout << "\nOtimização final na melhor solução...\n";
+//     run_vnd_ds_operator(bestOverall, irp, aco_params, true);
+
+//     return bestOverall;
+// }
+
+
+// Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, const ACO_Params& aco_params, bool verbose) {
+    
+//     const double LARGE_COST = 1e18;
+//     vector<Individual> pop;
+//     pop.reserve(ga_params.popSize);
+    
+//     std::cout << "Inicializando população..." << std::endl;
+//     for (int i = 0; i < ga_params.popSize; ++i) {
+//         Individual ind = make_new_heuristic_individual(irp, aco_params);
+//         build_routes_for_individual(ind, irp, aco_params);
+//         check_feasibility(ind, irp); 
+        
+//         if (ind.is_feasible) {
+//             calculate_total_cost(ind, irp);
+//             // --- MUDANÇA 2: NÃO APLICAR BUSCA LOCAL NA INICIALIZAÇÃO ---
+//             // Deixar a população "crua" aumenta a diversidade inicial.
+//             // A busca local (Gurobi) é tão forte que faria todos convergirem
+//             // para o mesmo ótimo local imediatamente.
+//         } else {
+//             ind.fitness = LARGE_COST;
+//         }
+//         pop.push_back(ind);
+        
+//         if (i % 10 == 0) std::cout << "."; // Progresso
+//     }
+//     std::cout << "\nPopulação inicial criada." << std::endl;
+    
+//     std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b){
+//         return a.fitness < b.fitness;
+//     });
+//     Individual bestOverall = pop.front();
+    
+//     std::cout << "\nIniciando loop do GA para " << ga_params.nGen << " gerações..." << std::endl;
+//     for (int gen = 0; gen < ga_params.nGen; ++gen) {
+//         vector<Individual> newPop;
+//         newPop.reserve(ga_params.popSize);
+
+//         // 1. Elitismo (10%)
+//         int num_elites = (int)(ga_params.popSize * 0.10);
+//         for(int i = 0; i < num_elites && i < pop.size(); ++i) {
+//             newPop.push_back(pop[i]);
+//         }
+
+//         // 2. Geração de Filhos (Crossover)
+//         int children_target_count = num_elites + (int)(ga_params.popSize * 0.70);
+//         int crossover_tries = 0; 
+
+//         while (newPop.size() < children_target_count && crossover_tries < ga_params.crossover_max_tries) {
+//             Individual parent1 = tournamentSelect(pop, ga_params.tournamentK);
+//             Individual parent2 = tournamentSelect(pop, ga_params.tournamentK);
+            
+//          std::pair<Individual, Individual> children;
+//         if (randreal() < ga_params.pCrossover) {
+//                         double r = randreal();
+//                         if (r < 0.33) {
+//                             children = one_point_crossover_customer(p1, p2, irp);
+//                         } else if (r < 0.66) {
+//                             children = two_point_crossover_customer(p1, p2, irp);
+//                         } else {
+//                             children = crossover_time_based(p1, p2, irp);
+//                         }
+//                     } else {
+//                         children = {p1, p2};
+//                     }
+            
+//             // Processa Filho 1
+//             crossover_tries++;
+//             // (Sem mutação, conforme solicitado)
+//             build_routes_for_individual(children.first, irp, aco_params);
+//             check_feasibility(children.first, irp); 
+            
+//             if (children.first.is_feasible) {
+//                 calculate_total_cost(children.first, irp); 
+                
+//                 // --- MUDANÇA 3: Probabilidade na Busca Local ---
+//                 // Aplica apenas 50% das vezes para economizar tempo e manter diversidade
+//                 if (randreal() < 0.50) { 
+//                     run_simple_reinsertion_search(children.first, irp, aco_params, false);
+//                 }
+//                 newPop.push_back(children.first);
+//             }
+            
+//             if (newPop.size() >= children_target_count) break;
+
+//             // Processa Filho 2
+//             crossover_tries++;
+//             build_routes_for_individual(children.second, irp, aco_params);
+//             check_feasibility(children.second, irp);
+//             if (children.second.is_feasible) {
+//                 calculate_total_cost(children.second, irp); 
+//                 if (randreal() < 0.50) {
+//                     run_simple_reinsertion_search(children.second, irp, aco_params, false);
+//                 }
+//                 newPop.push_back(children.second);
+//             }
+//         }
+
+//         // 3. Imigrantes (Diversidade Pura)
+//         while (newPop.size() < ga_params.popSize) {
+//             Individual ind = make_new_heuristic_individual(irp, aco_params);
+//             build_routes_for_individual(ind, irp, aco_params);
+//             check_feasibility(ind, irp);
+//             if (ind.is_feasible) {
+//                 calculate_total_cost(ind, irp);
+//                 // (Sem busca local nos imigrantes para serem "sangue novo")
+//             } else {
+//                 ind.fitness = LARGE_COST;
+//             }
+//             newPop.push_back(ind);
+//         }
+        
+//         pop.swap(newPop);
+
+//         // 4. Busca Pesada (Shaking) Periódica
+//         if (gen > 0 && gen % 100 == 0) {
+//             if (verbose) std::cout << "--- Gen " << gen << ": Executando Busca Pesada (VND-DS) na Elite ---\n";
+//             std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b){
+//                 return a.fitness < b.fitness;
+//             });
+//             // Aplica apenas nos top 5 para refinar a elite
+//             for(int i=0; i<std::min((int)pop.size(), 5); ++i) {
+//                 if (pop[i].is_feasible) run_vnd_ds_operator(pop[i], irp, aco_params, false);
+//             }
+//         }
+
+//         // Atualiza Melhor Global
+//         std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b){
+//             return a.fitness < b.fitness;
+//         });
+//         if (pop.front().fitness < bestOverall.fitness) {
+//             bestOverall = pop.front();
+//         }
+        
+//         // Log
+//         if (verbose || (gen % 10 == 0) || (gen == ga_params.nGen - 1)) {
+//             double avg_fit = 0.0;
+//             int count = 0;
+//             for(const auto& ind : pop) if(ind.is_feasible) { avg_fit += ind.fitness; count++; }
+//             if(count > 0) avg_fit /= count;
+
+//             std::cout << "Gen " << std::setw(4) << gen + 1 
+//                       << " | Melhor Pop: " << std::fixed << std::setprecision(2) << pop.front().fitness
+//                       << " | Média: " << avg_fit
+//                       << " | Global: " << bestOverall.fitness << "\n";
+//         }
+//     }
+    
+//     // Refinamento Final
+//     if (bestOverall.is_feasible) {
+//         std::cout << "\nOtimização final na melhor solução...\n";
+//         run_vnd_ds_operator(bestOverall, irp, aco_params, true); // Verbose na final
+//     }
+
+//     return bestOverall;
+// }
+
+
+
+// ... (Includes e funções anteriores) ...
+
+// --- FUNÇÃO PRINCIPAL DO GA (HGS COMPLETO) ---
+Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, const ACO_Params& aco_params, bool verbose) {
+    
+    const double LARGE_COST = 1e18;
+    vector<Individual> pop;
+    pop.reserve(ga_params.popSize * 2); // Reserva espaço extra para crescimento
+    
+    // --- 1. INICIALIZAÇÃO (COM DIVERSIDADE) ---
+    std::cout << "Inicializando população..." << std::endl;
+    int initial_pop_size = ga_params.popSize; 
+    
+    for (int i = 0; i < initial_pop_size; ++i) {
+        // Cria indivíduo "cru" com diversidade estrutural (10-50% removido)
+        Individual ind = make_new_heuristic_individual(irp, aco_params);
+        
+        // Constrói rotas base
+        build_routes_for_individual(ind, irp, aco_params);
+        check_feasibility(ind, irp); 
+        
+        if (ind.is_feasible) {
+            calculate_total_cost(ind, irp);
+            // MUDANÇA: NÃO aplica busca local aqui para manter diversidade inicial alta
+            // (Ou aplica uma busca MUITO leve se necessário, mas 'cru' é melhor para diversidade)
+        } else {
+            ind.fitness = LARGE_COST;
+        }
+        
+        // Garante que só entram factíveis (ou tenta de novo)
+        if (ind.is_feasible) {
+            pop.push_back(ind);
+        } else {
+            i--; 
+        }
+        if (i % 10 == 0 && i > 0) std::cout << "." << std::flush;
+    }
+    std::cout << "\nPopulação inicial gerada." << std::endl;
+
+    // Encontra o melhor inicial
+    Individual bestOverall = pop[0];
+    for(const auto& ind : pop) if(ind.fitness < bestOverall.fitness) bestOverall = ind;
+
+    int num_elites = (int)(ga_params.popSize * 0.10); // Para cálculo do Biased Fitness
+
+    // --- 2. LOOP EVOLUCIONÁRIO (HGS) ---
+    std::cout << "\nIniciando loop do GA (HGS) para " << ga_params.nGen << " iterações..." << std::endl;
+    
+    for (int gen = 0; gen < ga_params.nGen; ++gen) {
+        
+        // a) Atualiza métricas de população (Ranks e Biased Fitness)
+        update_biased_fitness(pop, irp.nCustomers, irp.nPeriods, num_elites);
+
+        // b) Seleção de Pais (Torneio Binário via Biased Fitness)
+        int idx1 = randint(0, pop.size() - 1);
+        int idx2 = randint(0, pop.size() - 1);
+        const Individual& p1 = (pop[idx1].biased_fitness < pop[idx2].biased_fitness) ? pop[idx1] : pop[idx2];
+        
+        idx1 = randint(0, pop.size() - 1);
+        idx2 = randint(0, pop.size() - 1);
+        const Individual& p2 = (pop[idx1].biased_fitness < pop[idx2].biased_fitness) ? pop[idx1] : pop[idx2];
+
+        // c) Crossover (Misto)
+        std::pair<Individual, Individual> children;
+        if (randreal() < ga_params.pCrossover) {
+            double r = randreal();
+            if (r < 0.33) {
+                children = one_point_crossover_customer(p1, p2, irp);
+            } else if (r < 0.66) {
+                children = two_point_crossover_customer(p1, p2, irp);
+            } else {
+                // Novo Crossover Temporal (Zhao et al.)
+                children = crossover_time_based(p1, p2, irp);
+            }
+        } else {
+            children = {p1, p2};
+        }
+
+        // d) Processamento do Filho 1 (Educação e Inserção)
+        build_routes_for_individual(children.first, irp, aco_params);
+        check_feasibility(children.first, irp);
+        if (children.first.is_feasible) {
+            calculate_total_cost(children.first, irp);
+            
+            // Educação Leve (Sempre aplica nos filhos para garantir qualidade local)
+            run_simple_reinsertion_search(children.first, irp, aco_params, false); 
+            
+            if (children.first.fitness < bestOverall.fitness) {
+                bestOverall = children.first;
+                std::cout << ">>> Nova Melhor Solução (Filho 1): " << std::fixed << std::setprecision(2) << bestOverall.fitness << "\n";
+            }
+            pop.push_back(children.first); // População cresce temporariamente
+        }
+
+        // e) Processamento do Filho 2
+        build_routes_for_individual(children.second, irp, aco_params);
+        check_feasibility(children.second, irp);
+        if (children.second.is_feasible) {
+            calculate_total_cost(children.second, irp);
+            
+            run_simple_reinsertion_search(children.second, irp, aco_params, false);
+            
+            if (children.second.fitness < bestOverall.fitness) {
+                bestOverall = children.second;
+                std::cout << ">>> Nova Melhor Solução (Filho 2): " << std::fixed << std::setprecision(2) << bestOverall.fitness << "\n";
+            }
+            pop.push_back(children.second);
+        }
+
+        // f) Seleção de Sobreviventes (Corte da População)
+        // Mantém tamanho constante removendo clones e piores (Biased Fitness)
+        if (pop.size() > ga_params.popSize) {
+            select_survivors(pop, ga_params.popSize, irp.nCustomers, irp.nPeriods, num_elites);
+        }
+
+        // g) Busca Local Pesada (VND-DS) / Shaking
+        // A cada 100 gerações, aplica a busca pesada (com Sweep) na elite
+        if (gen > 0 && gen % 100 == 0) {
+            if (verbose) std::cout << "\n--- Gen " << gen << ": Executando Busca Pesada (VND-DS) na Elite ---\n";
+            
+            // Reordena por custo puro para pegar a elite verdadeira
+            std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b){
+                return a.fitness < b.fitness;
+            });
+
+            // Aplica nos Top 5
+            for(int i=0; i<std::min((int)pop.size(), 5); ++i) {
+                run_vnd_ds_operator(pop[i], irp, aco_params, false);
+                if (pop[i].fitness < bestOverall.fitness) {
+                    bestOverall = pop[i];
+                    std::cout << ">>> Nova Melhor Solução (Busca Pesada): " << bestOverall.fitness << "\n";
+                }
+            }
+        }
+
+        // Log periódico
+        if (verbose || (gen % 50 == 0) || gen == ga_params.nGen - 1) {
+            double avg_fit = 0.0;
+            for(const auto& ind : pop) avg_fit += ind.fitness;
+            avg_fit /= pop.size();
+            
+            std::cout << "Gen " << std::setw(4) << gen 
+                      << " | Pop: " << pop.size()
+                      << " | Melhor: " << std::fixed << std::setprecision(2) << bestOverall.fitness
+                      << " | Média: " << avg_fit << "\n";
+        }
+    }
+    
+    // Análise final na melhor solução (com verbose)
+    std::cout << "\nOtimização final na melhor solução...\n";
+    run_vnd_ds_operator(bestOverall, irp, aco_params, true);
+
+    return bestOverall;
+}
