@@ -346,154 +346,269 @@ void build_routes_for_individual(Individual& ind, const IRP& irp, const ACO_Para
 
 
 
+// Individual make_new_heuristic_individual(const IRP& irp, const ACO_Params& aco_params) {
+    
+//     Individual ind(irp.nPeriods, irp.nCustomers);
+    
+//     // --- PASSO 1: Sortear 20% dos clientes para reservar ---
+//     // int num_reserved = static_cast<int>(irp.nCustomers * 1);
+//     double removal_rate = 0.10 + (randreal() * 0.40); // 0.10 a 0.50
+//     removal_rate = 0.0f;
+//     int num_reserved = static_cast<int>(irp.nCustomers * removal_rate);
+//     //if (num_reserved == 0 && irp.nCustomers > 0) num_reserved = 1; // Garante pelo menos 1
+    
+//     vector<int> customer_indices(irp.nCustomers);
+//     std::iota(customer_indices.begin(), customer_indices.end(), 0); // 0, 1, 2...
+//     std::shuffle(customer_indices.begin(), customer_indices.end(), rng);
+    
+//     std::set<int> reserved_customers; // Clientes a serem inseridos depois (0-based)
+//     for(int i=0; i < num_reserved; ++i) {
+//         reserved_customers.insert(customer_indices[i]);
+//     }
+    
+//     // --- PASSO 2: Construir solução para os 80% (Base) ---
+//     vector<long> current_inv(irp.nCustomers);
+//     for(int i = 0; i < irp.nCustomers; ++i) current_inv[i] = irp.customers[i].initialInv;
+//     long fleet_capacity = (long)irp.nVehicles * irp.Capacity;
+
+//     for (int t = 0; t < irp.nPeriods; ++t) {
+//         vector<int> min_deliveries_today(irp.nCustomers, 0);
+//         long period_load_min = 0;
+
+//         for (int c = 0; c < irp.nCustomers; ++c) {
+//             // PULA CLIENTES RESERVADOS
+//             if (reserved_customers.count(c)) continue; 
+
+//             long inv_after_demand = current_inv[c] - irp.customers[c].demand[t];
+//             if (inv_after_demand < irp.customers[c].minLevelInv) {
+//                 long needed = irp.customers[c].minLevelInv - inv_after_demand;
+//                 long space_available = irp.customers[c].maxLevelInv - current_inv[c];
+//                 long delivery_amount = std::min({needed, space_available, (long)irp.Capacity});
+                
+//                 if (delivery_amount > 0) {
+//                     min_deliveries_today[c] = delivery_amount;
+//                     period_load_min += delivery_amount;
+//                 }
+//             }
+//         }
+        
+//         ind.deliveries[t] = min_deliveries_today;
+//         long current_period_load = period_load_min;
+        
+//         if (current_period_load > fleet_capacity) {
+//             // (Simula para o próximo dia)
+//             for (int c = 0; c < irp.nCustomers; ++c) {
+//                 if (reserved_customers.count(c)) continue; // Pula
+//                 current_inv[c] += (long)ind.deliveries[t][c] - irp.customers[c].demand[t];
+//                 if(current_inv[c] < irp.customers[c].minLevelInv) current_inv[c] = irp.customers[c].minLevelInv;
+//             }
+//             continue; 
+//         }
+
+//         // Entregas oportunistas (apenas para os 80%)
+//         long remaining_fleet_cap = fleet_capacity - current_period_load;
+//         vector<int> customer_order;
+//         for(int c=0; c < irp.nCustomers; ++c) if(!reserved_customers.count(c)) customer_order.push_back(c);
+//         std::shuffle(customer_order.begin(), customer_order.end(), rng);
+
+//         for (int c : customer_order) {
+//             if (remaining_fleet_cap <= 0) break;
+//             if (randreal() < 0.15) { 
+//                 int N = randint(1, 3);
+//                 long q_extra = 0;
+//                 for (int t_future = t + 1; t_future <= t + N && t_future < irp.nPeriods; ++t_future) {
+//                     q_extra += irp.customers[c].demand[t_future];
+//                 }
+//                 if (q_extra == 0) continue;
+                
+//                 long current_delivery = ind.deliveries[t][c];
+//                 long space = irp.customers[c].maxLevelInv - (current_inv[c] + current_delivery);
+//                 long max_q_vehicle = (long)irp.Capacity - current_delivery;
+//                 q_extra = std::min({q_extra, space, max_q_vehicle, remaining_fleet_cap});
+
+//                 if (q_extra > 0) {
+//                     ind.deliveries[t][c] += q_extra;
+//                     remaining_fleet_cap -= q_extra;
+//                 }
+//             }
+//         } 
+        
+//         // Simula inventário para o próximo dia (apenas 80%)
+//         for (int c = 0; c < irp.nCustomers; ++c) {
+//             if (reserved_customers.count(c)) continue; // Pula
+//             current_inv[c] += (long)ind.deliveries[t][c] - irp.customers[c].demand[t];
+//             if(current_inv[c] < irp.customers[c].minLevelInv) {
+//                 current_inv[c] = irp.customers[c].minLevelInv;
+//             }
+//         }
+//     } // Fim do loop 't' (plano 80% está feito)
+    
+//     // --- PASSO 3: Criar as rotas base (sem os clientes reservados) ---
+//     build_routes_for_individual(ind, irp, aco_params);
+//     // (Neste ponto, 'ind' é uma solução parcial factível para 80% dos clientes)
+
+//     // --- PASSO 4: Chamar a "busca local" (lógica Gurobi) para INSERIR os clientes ---
+    
+ 
+              
+//     for (int c_id_internal : reserved_customers) {
+        
+//         // 1. Calcula dados de reinserção (custos F_t(q)) para 'c'
+//         //    com base nas rotas ATUAIS (que ainda não o contêm)
+//         ReinsertionData data = calculate_reinsertion_data(ind, irp, aco_params, c_id_internal);
+        
+//         // 2. Chama Gurobi para encontrar o plano de inventário ótimo para 'c'
+//         GurobiInventoryResult result = computePerfectInventory_Gurobi(
+//             irp.customers[c_id_internal],
+//             irp.depots[0],
+//             {}, 
+//             data.insertion_cost_curves,
+//             irp.nPeriods,
+//             (double)irp.Capacity 
+//         );
+
+//         if (result.totalCost >= PENALTY_COST * 0.9) {
+//             // Gurobi falhou em encontrar um plano de inserção.
+//             // O indivíduo provavelmente será infactível.
+//              std::cerr << "AVISO: Falha do Gurobi ao inserir cliente " << (c_id_internal+1) << "\n";
+//             continue; // Tenta o próximo cliente
+//         }
+
+//         // 3. ATUALIZA O GENÓTIPO: Adiciona o plano do Gurobi ao 'ind.deliveries'
+//         for(int t=0; t < irp.nPeriods; ++t) {
+//             int delivery_q = static_cast<int>(std::round(result.q[t]));
+//             if (delivery_q > 0) {
+//                 ind.deliveries[t][c_id_internal] = delivery_q;
+//             }
+//         }
+        
+//         // 4. ATUALIZA O FENÓTIPO: Reconstrói as rotas
+//         // (Agora incluindo o cliente 'c')
+//         build_routes_for_individual(ind, irp, aco_params);
+        
+//         // (Verificação de factibilidade não é necessária aqui, 
+//         // pois a próxima inserção (passo 1) recalculará tudo)
+//     }
+
+//     return ind;
+// }
+
+
 Individual make_new_heuristic_individual(const IRP& irp, const ACO_Params& aco_params) {
     
     Individual ind(irp.nPeriods, irp.nCustomers);
     
-    // --- PASSO 1: Sortear 20% dos clientes para reservar ---
-    // int num_reserved = static_cast<int>(irp.nCustomers * 1);
-    double removal_rate = 0.10 + (randreal() * 0.40); // 0.10 a 0.50
-    int num_reserved = static_cast<int>(irp.nCustomers * removal_rate);
-    if (num_reserved == 0 && irp.nCustomers > 0) num_reserved = 1; // Garante pelo menos 1
-    
-    vector<int> customer_indices(irp.nCustomers);
-    std::iota(customer_indices.begin(), customer_indices.end(), 0); // 0, 1, 2...
-    std::shuffle(customer_indices.begin(), customer_indices.end(), rng);
-    
-    std::set<int> reserved_customers; // Clientes a serem inseridos depois (0-based)
-    for(int i=0; i < num_reserved; ++i) {
-        reserved_customers.insert(customer_indices[i]);
-    }
-    
-    // --- PASSO 2: Construir solução para os 80% (Base) ---
     vector<long> current_inv(irp.nCustomers);
     for(int i = 0; i < irp.nCustomers; ++i) current_inv[i] = irp.customers[i].initialInv;
-    long fleet_capacity = (long)irp.nVehicles * irp.Capacity;
+
+    double service_probability = 0.3 + (randreal() * 0.5);
 
     for (int t = 0; t < irp.nPeriods; ++t) {
-        vector<int> min_deliveries_today(irp.nCustomers, 0);
-        long period_load_min = 0;
-
+        // 1. Identificar Urgentes e Não-Urgentes
+        vector<int> urgent_customers;
+        vector<int> non_urgent_customers;
+        
         for (int c = 0; c < irp.nCustomers; ++c) {
-            // PULA CLIENTES RESERVADOS
-            if (reserved_customers.count(c)) continue; 
-
-            long inv_after_demand = current_inv[c] - irp.customers[c].demand[t];
-            if (inv_after_demand < irp.customers[c].minLevelInv) {
-                long needed = irp.customers[c].minLevelInv - inv_after_demand;
-                long space_available = irp.customers[c].maxLevelInv - current_inv[c];
-                long delivery_amount = std::min({needed, space_available, (long)irp.Capacity});
-                
-                if (delivery_amount > 0) {
-                    min_deliveries_today[c] = delivery_amount;
-                    period_load_min += delivery_amount;
+            long inv_next = current_inv[c] - irp.customers[c].demand[t];
+            if (inv_next < irp.customers[c].minLevelInv) {
+                urgent_customers.push_back(c);
+            } else {
+                if (current_inv[c] < irp.customers[c].maxLevelInv) {
+                    non_urgent_customers.push_back(c);
                 }
             }
         }
-        
-        ind.deliveries[t] = min_deliveries_today;
-        long current_period_load = period_load_min;
-        
-        if (current_period_load > fleet_capacity) {
-            // (Simula para o próximo dia)
-            for (int c = 0; c < irp.nCustomers; ++c) {
-                if (reserved_customers.count(c)) continue; // Pula
-                current_inv[c] += (long)ind.deliveries[t][c] - irp.customers[c].demand[t];
-                if(current_inv[c] < irp.customers[c].minLevelInv) current_inv[c] = irp.customers[c].minLevelInv;
-            }
-            continue; 
+
+        // 2. Inicializar "Veículos Virtuais"
+        // (Agora o compilador sabe o que é 'VehicleBin')
+        vector<VehicleBin> fleet(irp.nVehicles);
+        for(int k=0; k<irp.nVehicles; ++k) {
+            fleet[k] = {k, 0, irp.Capacity};
         }
 
-        // Entregas oportunistas (apenas para os 80%)
-        long remaining_fleet_cap = fleet_capacity - current_period_load;
-        vector<int> customer_order;
-        for(int c=0; c < irp.nCustomers; ++c) if(!reserved_customers.count(c)) customer_order.push_back(c);
-        std::shuffle(customer_order.begin(), customer_order.end(), rng);
+        std::shuffle(urgent_customers.begin(), urgent_customers.end(), rng);
+        std::shuffle(non_urgent_customers.begin(), non_urgent_customers.end(), rng);
 
-        for (int c : customer_order) {
-            if (remaining_fleet_cap <= 0) break;
-            if (randreal() < 0.15) { 
-                int N = randint(1, 3);
-                long q_extra = 0;
-                for (int t_future = t + 1; t_future <= t + N && t_future < irp.nPeriods; ++t_future) {
-                    q_extra += irp.customers[c].demand[t_future];
-                }
-                if (q_extra == 0) continue;
-                
-                long current_delivery = ind.deliveries[t][c];
-                long space = irp.customers[c].maxLevelInv - (current_inv[c] + current_delivery);
-                long max_q_vehicle = (long)irp.Capacity - current_delivery;
-                q_extra = std::min({q_extra, space, max_q_vehicle, remaining_fleet_cap});
+        // 3. Atender Urgentes (Mandatório)
+        for (int c : urgent_customers) {
+            long demand_today = irp.customers[c].demand[t];
+            long min_needed = irp.customers[c].minLevelInv - (current_inv[c] - demand_today);
+            long max_can_receive = irp.customers[c].maxLevelInv - current_inv[c];
+            
+            int best_v = -1;
+            int min_waste = irp.Capacity + 1;
 
-                if (q_extra > 0) {
-                    ind.deliveries[t][c] += q_extra;
-                    remaining_fleet_cap -= q_extra;
+            // Tenta alocar a quantidade MÍNIMA (Best Fit)
+            for(int k=0; k<irp.nVehicles; ++k) {
+                if (fleet[k].current_load + min_needed <= fleet[k].capacity) {
+                    int waste = fleet[k].capacity - (fleet[k].current_load + min_needed);
+                    if (waste < min_waste) {
+                        min_waste = waste;
+                        best_v = k;
+                    }
                 }
             }
-        } 
-        
-        // Simula inventário para o próximo dia (apenas 80%)
+
+            if (best_v != -1) {
+                // Coube. Tenta entregar mais (Order-Up-To ou encher o veículo)
+                long space_in_vehicle = fleet[best_v].capacity - fleet[best_v].current_load;
+                long delivery = std::min(max_can_receive, space_in_vehicle);
+                // Garante que pelo menos o mínimo seja entregue
+                delivery = std::max(delivery, min_needed); 
+                
+                ind.deliveries[t][c] = delivery;
+                fleet[best_v].current_load += delivery;
+            } else {
+                // FALHA CRÍTICA (Plano mínimo não cabe na frota)
+                // Força a entrega no veículo mais vazio (cria infactibilidade)
+                int v_empty = 0; 
+                for(int k=1; k<irp.nVehicles; ++k) if(fleet[k].current_load < fleet[v_empty].current_load) v_empty = k;
+                
+                ind.deliveries[t][c] = min_needed; 
+                fleet[v_empty].current_load += min_needed; 
+            }
+        }
+
+        // 4. Atender Não-Urgentes (Oportunista)
+        for (int c : non_urgent_customers) {
+            if (randreal() > service_probability) continue;
+
+            long max_can_receive = irp.customers[c].maxLevelInv - current_inv[c];
+            if (max_can_receive <= 0) continue;
+
+            // Encontra um veículo com espaço (First Fit)
+            int best_v = -1;
+            for(int k=0; k<irp.nVehicles; ++k) {
+                if (fleet[k].current_load < fleet[k].capacity) {
+                    best_v = k;
+                    break;
+                }
+            }
+
+            if (best_v != -1) {
+                long space_in_vehicle = fleet[best_v].capacity - fleet[best_v].current_load;
+                long max_possible = std::min(max_can_receive, space_in_vehicle);
+                
+                if (max_possible > 0) {
+                    double ratio = 0.5 + (randreal() * 0.5); 
+                    long delivery = std::max(1L, (long)(max_possible * ratio));
+                    
+                    ind.deliveries[t][c] = delivery;
+                    fleet[best_v].current_load += delivery;
+                }
+            }
+        }
+
+        // 5. Atualiza Estoque para t+1
         for (int c = 0; c < irp.nCustomers; ++c) {
-            if (reserved_customers.count(c)) continue; // Pula
             current_inv[c] += (long)ind.deliveries[t][c] - irp.customers[c].demand[t];
-            if(current_inv[c] < irp.customers[c].minLevelInv) {
+            if (current_inv[c] < irp.customers[c].minLevelInv) 
                 current_inv[c] = irp.customers[c].minLevelInv;
-            }
         }
-    } // Fim do loop 't' (plano 80% está feito)
-    
-    // --- PASSO 3: Criar as rotas base (sem os clientes reservados) ---
-    build_routes_for_individual(ind, irp, aco_params);
-    // (Neste ponto, 'ind' é uma solução parcial factível para 80% dos clientes)
-
-    // --- PASSO 4: Chamar a "busca local" (lógica Gurobi) para INSERIR os clientes ---
-    
- 
-              
-    for (int c_id_internal : reserved_customers) {
-        
-        // 1. Calcula dados de reinserção (custos F_t(q)) para 'c'
-        //    com base nas rotas ATUAIS (que ainda não o contêm)
-        ReinsertionData data = calculate_reinsertion_data(ind, irp, aco_params, c_id_internal);
-        
-        // 2. Chama Gurobi para encontrar o plano de inventário ótimo para 'c'
-        GurobiInventoryResult result = computePerfectInventory_Gurobi(
-            irp.customers[c_id_internal],
-            irp.depots[0],
-            {}, 
-            data.insertion_cost_curves,
-            irp.nPeriods,
-            (double)irp.Capacity 
-        );
-
-        if (result.totalCost >= PENALTY_COST * 0.9) {
-            // Gurobi falhou em encontrar um plano de inserção.
-            // O indivíduo provavelmente será infactível.
-             std::cerr << "AVISO: Falha do Gurobi ao inserir cliente " << (c_id_internal+1) << "\n";
-            continue; // Tenta o próximo cliente
-        }
-
-        // 3. ATUALIZA O GENÓTIPO: Adiciona o plano do Gurobi ao 'ind.deliveries'
-        for(int t=0; t < irp.nPeriods; ++t) {
-            int delivery_q = static_cast<int>(std::round(result.q[t]));
-            if (delivery_q > 0) {
-                ind.deliveries[t][c_id_internal] = delivery_q;
-            }
-        }
-        
-        // 4. ATUALIZA O FENÓTIPO: Reconstrói as rotas
-        // (Agora incluindo o cliente 'c')
-        build_routes_for_individual(ind, irp, aco_params);
-        
-        // (Verificação de factibilidade não é necessária aqui, 
-        // pois a próxima inserção (passo 1) recalculará tudo)
     }
 
     return ind;
 }
-
-
-
 
 // Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, const ACO_Params& aco_params, bool verbose) {
     
@@ -1309,155 +1424,191 @@ void select_survivors(std::vector<Individual>& pop, int target_size, int nCustom
 
 // ... (Includes e funções anteriores) ...
 
-// --- FUNÇÃO PRINCIPAL DO GA (HGS COMPLETO) ---
 Individual run_genetic_algorithm(const IRP& irp, const GA_Params& ga_params, const ACO_Params& aco_params, bool verbose) {
     
     const double LARGE_COST = 1e18;
     vector<Individual> pop;
-    pop.reserve(ga_params.popSize * 2); // Reserva espaço extra para crescimento
+    pop.reserve(ga_params.popSize); 
     
     // --- 1. INICIALIZAÇÃO (COM DIVERSIDADE) ---
     std::cout << "Inicializando população..." << std::endl;
     int initial_pop_size = ga_params.popSize; 
     
     for (int i = 0; i < initial_pop_size; ++i) {
-        // Cria indivíduo "cru" com diversidade estrutural (10-50% removido)
         Individual ind = make_new_heuristic_individual(irp, aco_params);
         
-        // Constrói rotas base
         build_routes_for_individual(ind, irp, aco_params);
         check_feasibility(ind, irp); 
         
         if (ind.is_feasible) {
             calculate_total_cost(ind, irp);
-            // MUDANÇA: NÃO aplica busca local aqui para manter diversidade inicial alta
-            // (Ou aplica uma busca MUITO leve se necessário, mas 'cru' é melhor para diversidade)
         } else {
             ind.fitness = LARGE_COST;
         }
         
-        // Garante que só entram factíveis (ou tenta de novo)
-        if (ind.is_feasible) {
-            pop.push_back(ind);
-        } else {
-            i--; 
-        }
+        // --- CORREÇÃO DO LOOP INFINITO ---
+        // Adiciona o indivíduo factível (com custo real) ou
+        // infactível (com custo LARGE_COST).
+        // A lógica 'i--' foi removida.
+        pop.push_back(ind);
+        // --- FIM DA CORREÇÃO ---
+
         if (i % 10 == 0 && i > 0) std::cout << "." << std::flush;
     }
     std::cout << "\nPopulação inicial gerada." << std::endl;
 
-    // Encontra o melhor inicial
-    Individual bestOverall = pop[0];
-    for(const auto& ind : pop) if(ind.fitness < bestOverall.fitness) bestOverall = ind;
+    // --- CORREÇÃO NA SELEÇÃO DO MELHOR INICIAL ---
+    // Ordena a população para garantir que 'bestOverall' seja
+    // o melhor indivíduo factível, e não apenas pop[0].
+    std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b){
+        return a.fitness < b.fitness;
+    });
+    
+    Individual bestOverall = pop.front();
+    if (!bestOverall.is_feasible) {
+        std::cerr << "AVISO: Nenhum indivíduo factível gerado na população inicial." << std::endl;
+        // bestOverall já terá fitness = LARGE_COST, o que é correto.
+    }
+    // --- FIM DA CORREÇÃO ---
 
-    int num_elites = (int)(ga_params.popSize * 0.10); // Para cálculo do Biased Fitness
+    int num_elites = (int)(ga_params.popSize * 0.10);
 
     // --- 2. LOOP EVOLUCIONÁRIO (HGS) ---
     std::cout << "\nIniciando loop do GA (HGS) para " << ga_params.nGen << " iterações..." << std::endl;
     
     for (int gen = 0; gen < ga_params.nGen; ++gen) {
         
-        // a) Atualiza métricas de população (Ranks e Biased Fitness)
-        update_biased_fitness(pop, irp.nCustomers, irp.nPeriods, num_elites);
+        // (Log movido para o final do loop para refletir o estado da geração)
 
-        // b) Seleção de Pais (Torneio Binário via Biased Fitness)
-        int idx1 = randint(0, pop.size() - 1);
-        int idx2 = randint(0, pop.size() - 1);
-        const Individual& p1 = (pop[idx1].biased_fitness < pop[idx2].biased_fitness) ? pop[idx1] : pop[idx2];
-        
-        idx1 = randint(0, pop.size() - 1);
-        idx2 = randint(0, pop.size() - 1);
-        const Individual& p2 = (pop[idx1].biased_fitness < pop[idx2].biased_fitness) ? pop[idx1] : pop[idx2];
+        vector<Individual> newPop;
+        newPop.reserve(ga_params.popSize);
 
-        // c) Crossover (Misto)
-        std::pair<Individual, Individual> children;
-        if (randreal() < ga_params.pCrossover) {
-            double r = randreal();
-            if (r < 0.33) {
-                children = one_point_crossover_customer(p1, p2, irp);
-            } else if (r < 0.66) {
-                children = two_point_crossover_customer(p1, p2, irp);
+        // 1. Elitismo
+        int num_elites = (int)(ga_params.popSize * 0.10);
+        for(int i = 0; i < num_elites && i < pop.size(); ++i) {
+            newPop.push_back(pop[i]); // pop já está ordenada
+        }
+
+        // 2. Geração de Filhos
+        int children_target_count = num_elites + (int)(ga_params.popSize * 0.70);
+        int crossover_tries = 0; // Adicionado contador para segurança
+
+        while (newPop.size() < children_target_count && crossover_tries < ga_params.crossover_max_tries) {
+            crossover_tries++; // Incrementa tentativas
+
+            Individual parent1 = tournamentSelect(pop, ga_params.tournamentK);
+            Individual parent2 = tournamentSelect(pop, ga_params.tournamentK);
+            
+            std::pair<Individual, Individual> children;
+            if (randreal() < ga_params.pCrossover) {
+                 double r = randreal();
+                 if (r < 0.33) {
+                    children = one_point_crossover_customer(parent1, parent2, irp);
+                 } else if (r < 0.66) {
+                    children = two_point_crossover_customer(parent1, parent2, irp);
+                 } else {
+                    children = crossover_time_based(parent1, parent2, irp);
+                 }
             } else {
-                // Novo Crossover Temporal (Zhao et al.)
-                children = crossover_time_based(p1, p2, irp);
+                children = {parent1, parent2};
             }
-        } else {
-            children = {p1, p2};
-        }
-
-        // d) Processamento do Filho 1 (Educação e Inserção)
-        build_routes_for_individual(children.first, irp, aco_params);
-        check_feasibility(children.first, irp);
-        if (children.first.is_feasible) {
-            calculate_total_cost(children.first, irp);
             
-            // Educação Leve (Sempre aplica nos filhos para garantir qualidade local)
-            run_simple_reinsertion_search(children.first, irp, aco_params, false); 
+            // --- Processa o Filho 1 ---
+            build_routes_for_individual(children.first, irp, aco_params);
             
-            if (children.first.fitness < bestOverall.fitness) {
-                bestOverall = children.first;
-                std::cout << ">>> Nova Melhor Solução (Filho 1): " << std::fixed << std::setprecision(2) << bestOverall.fitness << "\n";
+            // Aplica busca local "pesada" (VND-DS)
+            if(gen > 0 && gen % 100 == 0) {
+                // (Renomeei 'busca_local' para a função que definimos)
+                run_vnd_ds_operator(children.first, irp, aco_params, false);
+            } else if (randreal() > 0.5f) {
+                // Aplica busca local "leve"
+                run_simple_reinsertion_search(children.first, irp, aco_params, false);
             }
-            pop.push_back(children.first); // População cresce temporariamente
-        }
-
-        // e) Processamento do Filho 2
-        build_routes_for_individual(children.second, irp, aco_params);
-        check_feasibility(children.second, irp);
-        if (children.second.is_feasible) {
-            calculate_total_cost(children.second, irp);
             
-            run_simple_reinsertion_search(children.second, irp, aco_params, false);
+            check_feasibility(children.first, irp); 
             
-            if (children.second.fitness < bestOverall.fitness) {
-                bestOverall = children.second;
-                std::cout << ">>> Nova Melhor Solução (Filho 2): " << std::fixed << std::setprecision(2) << bestOverall.fitness << "\n";
+            if (children.first.is_feasible) {
+                calculate_total_cost(children.first, irp); 
+            } else {
+                children.first.fitness = LARGE_COST;
             }
-            pop.push_back(children.second);
-        }
-
-        // f) Seleção de Sobreviventes (Corte da População)
-        // Mantém tamanho constante removendo clones e piores (Biased Fitness)
-        if (pop.size() > ga_params.popSize) {
-            select_survivors(pop, ga_params.popSize, irp.nCustomers, irp.nPeriods, num_elites);
-        }
-
-        // g) Busca Local Pesada (VND-DS) / Shaking
-        // A cada 100 gerações, aplica a busca pesada (com Sweep) na elite
-        if (gen > 0 && gen % 100 == 0) {
-            if (verbose) std::cout << "\n--- Gen " << gen << ": Executando Busca Pesada (VND-DS) na Elite ---\n";
+            newPop.push_back(children.first);
             
-            // Reordena por custo puro para pegar a elite verdadeira
-            std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b){
-                return a.fitness < b.fitness;
-            });
+            if (newPop.size() >= children_target_count) break;
 
-            // Aplica nos Top 5
-            for(int i=0; i<std::min((int)pop.size(), 5); ++i) {
-                run_vnd_ds_operator(pop[i], irp, aco_params, false);
-                if (pop[i].fitness < bestOverall.fitness) {
-                    bestOverall = pop[i];
-                    std::cout << ">>> Nova Melhor Solução (Busca Pesada): " << bestOverall.fitness << "\n";
-                }
+            // --- Processa o Filho 2 ---
+            build_routes_for_individual(children.second, irp, aco_params);
+            
+            if(gen > 0 && gen % 100 == 0) {
+                run_vnd_ds_operator(children.second, irp, aco_params, false);
+            } else {
+                run_simple_reinsertion_search(children.second, irp, aco_params, false);
+            }
+
+            check_feasibility(children.second, irp);
+            
+            if (children.second.is_feasible) {
+                calculate_total_cost(children.second, irp); 
+            } else {
+                children.second.fitness = LARGE_COST;
+            }
+            newPop.push_back(children.second);
+        } // Fim do while (filhos)
+
+        // 3. Geração de novas soluções (Imigrantes)
+        while (newPop.size() < ga_params.popSize) {
+            Individual ind = make_new_heuristic_individual(irp, aco_params);
+            build_routes_for_individual(ind, irp, aco_params);
+
+            // Aplica busca local "leve" no imigrante
+            run_simple_reinsertion_search(ind, irp, aco_params, false);
+
+            check_feasibility(ind, irp);
+            
+            if (ind.is_feasible) {
+                calculate_total_cost(ind, irp);
+            } else {
+                ind.fitness = LARGE_COST;
+            }
+            newPop.push_back(ind);
+        }
+        
+        pop.swap(newPop);
+
+        std::sort(pop.begin(), pop.end(), [](const Individual& a, const Individual& b){
+            return a.fitness < b.fitness;
+        });
+        
+        if (pop.front().fitness < bestOverall.fitness) {
+            bestOverall = pop.front();
+        }
+        
+        // Log da Geração
+        double min_fit = pop.front().fitness;
+        double avg_fit = 0.0;
+        int feasible_count = 0;
+        for(const auto& ind : pop) {
+            if(ind.is_feasible) {
+                avg_fit += ind.fitness;
+                feasible_count++;
             }
         }
-
-        // Log periódico
-        if (verbose || (gen % 50 == 0) || gen == ga_params.nGen - 1) {
-            double avg_fit = 0.0;
-            for(const auto& ind : pop) avg_fit += ind.fitness;
-            avg_fit /= pop.size();
-            
-            std::cout << "Gen " << std::setw(4) << gen 
-                      << " | Pop: " << pop.size()
-                      << " | Melhor: " << std::fixed << std::setprecision(2) << bestOverall.fitness
-                      << " | Média: " << avg_fit << "\n";
+        if (feasible_count > 0) avg_fit /= feasible_count;
+        
+        if (verbose || (gen % 10 == 0) || (gen == ga_params.nGen - 1)) {
+            std::cout << "Gen " << std::setw(4) << gen + 1 << "/" << ga_params.nGen
+                      << " | Fact.: " << std::setw(3) << feasible_count << "/" << (int)pop.size()
+                      << " | Melhor: " << std::fixed << std::setprecision(2) << min_fit
+                      << " | Média(fact): " << avg_fit
+                      << " | Global: " << bestOverall.fitness << std::endl;
         }
     }
     
-    // Análise final na melhor solução (com verbose)
-    std::cout << "\nOtimização final na melhor solução...\n";
-    run_vnd_ds_operator(bestOverall, irp, aco_params, true);
-
+    // Aplica a busca local "pesada" na melhor solução final
+    if(bestOverall.is_feasible) {
+        std::cout << "\nOtimização final (Pesada) na melhor solução...\n";
+        run_vnd_ds_operator(bestOverall, irp, aco_params, verbose);
+    }
+    
     return bestOverall;
 }

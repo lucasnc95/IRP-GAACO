@@ -31,6 +31,15 @@ void exportAndPlotRoutes(
     const std::string& pyScript = "plot_routes.py"
 );
 
+
+struct VehicleBin {
+    int id;
+    int current_load;
+    int capacity;
+};
+
+
+
 // --- NOVA FUNÇÃO (RENOMEADA) ---
 /**
  * @brief (Função APENAS para construir rotas)
